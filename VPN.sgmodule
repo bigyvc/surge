@@ -9,5 +9,5 @@ hostname =  %APPEND% *.vpn.eric,ioa.onskrgames.uk
 
 
 [Script]
-onskrVPN = type=http-request,pattern=https://onskr.vpn.eric/web/sub,requires-body=0,max-size=0,binary-body-mode=0,script-path=https://raw.githubusercontent.com/cuidayu/surge/refs/heads/main/ONSKR.js
-onskr = type=http-response,pattern=https://ioa.onskrgames.uk/getLines,requires-body=1,script-path=https://raw.githubusercontent.com/cuidayu/surge/refs/heads/main/ONSKR.js,max-size=0,binary-body-mode=0
+onskrVPN = type=http-request,pattern=https://onskr.vpn.eric/web/sub,requires-body=0,max-size=0,binary-body-mode=0,script-path=https://raw.githubusercontent.com/bigyvc/surge/refs/heads/main/ONSKR.js
+onskr = type=http-response,pattern=https://ioa.onskrgames.uk/getLines,requires-body=1,script-path=https://raw.githubusercontent.com/bigyvc/surge/refs/heads/main/ONSKR.js,max-size=0,binary-body-mode=0
