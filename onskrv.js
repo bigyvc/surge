@@ -1,0 +1,822 @@
+/**
+ * ==============================
+ * ONSKR.js (Readable Refactor v2)
+ * ------------------------------
+ * - Strings deobfuscated
+ * - Formatting + light renames for readability
+ * - No functional intent changed (but remote eval remains)
+ * ==============================
+ */
+
+var iｉl = 'jsjiami.cn.v7';
+const decodeStr = liIiiIl1; // jsjiami string decoder (defined later)
+
+const REMOTE_EVN_JS = 'https://raw.githubusercontent.com/Alex0510/Eric/master/surge/Script/evn.js',
+  REMOTE_UTILS_JS = 'https://cdn.jsdelivr.net/gh/xzxxn777/Surge@main/Utils/Utils.js',
+  REMOTE_CRYPTOJS = 'https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js',
+  isSurge = typeof $httpClient !== 'undefined' && typeof $surge !== 'undefined',
+  isQuanX = typeof $task !== 'undefined',
+  httpClient = isQuanX ? $task['fetch'] : $httpClient,
+  DEFAULT_HEADERS = {
+    authority: 'ioa.onskrgames.uk',
+    'content-type': 'application/x-www-form-urlencoded',
+    accept: '*/*',
+    versionnum: '1.1',
+    bundleid: 'com.vpn.onskrvpn',
+    dtype: '2',
+    'accept-encoding': 'gzip, deflate, br',
+    'accept-language': 'zh-Hans-CN;q=1',
+    'content-length': '201',
+    'user-agent': 'OnSkrApp/1.1 (iPhone; iOS 16.1.1; Scale/3.00)',
+    cookie: 'PHPSESSID=d67onj4srth0o18ocv58iclsi5',
+  },
+  DEFAULT_BODY =
+    'formInfo=4265a9c353cd8624fd2bc7b5d75d2f180a40d7443bd9fd7d755b804f9362c53f538e090ac89cf7b63208e2053985e88284f7192ae496021bb2e97854bc5db44746bd2312d8dc9cc2f44a5c194b8ec2d7f3a25ebd08c584e825f20045c703dfea';
+if (
+  typeof $request !== 'undefined' &&
+  $request['url']['includes']('https://onskr.vpn.bigyvc/web/sub')
+) {
+  const IiIi1Iii = 'https://ioa.onskrgames.uk/getLines';
+  (console['log']('替换后的 URL: ' + IiIi1Iii), $done({ url: IiIi1Iii }));
+} else
+  typeof $request !== 'undefined' &&
+  $request['url']['includes']('https://ioa.onskrgames.uk/getLines')
+    ? loadAndEvalRemoteScript(REMOTE_CRYPTOJS, () => {
+        const IIII1lI1 = decodeStr,
+          lIIIi11I = {
+            DtUzE: function (i1i11i1i) {
+              return i1i11i1i();
+            },
+            EeSXK: function (iIIliii, il1l1Ii1, lIIIii11) {
+              return iIIliii(il1l1Ii1, lIIIii11);
+            },
+            JMTrM: IIII1lI1(0x103, 'OMXM'),
+            DtyXE: function (lIii1IIl, lIl1IlIi, l11II11I) {
+              return lIii1IIl(lIl1IlIi, l11II11I);
+            },
+          };
+        (console[IIII1lI1(0x115, 'QCF&')](lIIIi11I[IIII1lI1(0xb5, 'RL^K')]),
+          lIIIi11I[IIII1lI1(0xc6, 'S^E2')](loadAndEvalRemoteScript, REMOTE_EVN_JS, () => {
+            const IiIiI1l1 = IIII1lI1;
+            lIIIi11I[IiIiI1l1(0x12d, 'TMuP')](loadAndEvalRemoteScript, REMOTE_UTILS_JS, () => {
+              const IilIIiil = IiIiI1l1;
+              lIIIi11I[IilIIiil(0x78, '3ue#')](handleGetLines);
+            });
+          }));
+      })
+    : $done({});
+function loadAndEvalRemoteScript(IIIl1il1, II1llIll) {
+  const Ili1iili = decodeStr,
+    ll1IlII = {
+      kABxO: Ili1iili(0x149, '3ue#'),
+      SKmuE: Ili1iili(0x77, 'Gojp'),
+      GCLEN: function (iI1ii1I, li1iiiIl) {
+        return iI1ii1I !== li1iiiIl;
+      },
+      zVlsD: Ili1iili(0x76, 'RL^K'),
+      CYSha: function (Ill1lil1, lIIIIIi1) {
+        return Ill1lil1 === lIIIIIi1;
+      },
+      pkdip: Ili1iili(0xbe, 'u#He'),
+      yqLXg: Ili1iili(0xbc, '3ue#'),
+      OCfgh: function (lllIlI1, IlllllI1) {
+        return lllIlI1(IlllllI1);
+      },
+      lpVWl: Ili1iili(0xef, '4guf'),
+      nMHbh: Ili1iili(0x128, '3ue#'),
+      UmPDK: function (iiiIl11) {
+        return iiiIl11();
+      },
+      VlkGE: function (il1I1111) {
+        return il1I1111();
+      },
+      YESvX: Ili1iili(0x82, 'DE5k'),
+      tIuzr: function (iII1IlII, ll1ili1I) {
+        return iII1IlII + ll1ili1I;
+      },
+      vGcre: Ili1iili(0xa9, 'kC)H'),
+      LlaCb: function (IlIiIIII, lIll1l) {
+        return IlIiIIII(lIll1l);
+      },
+      GMiXP: Ili1iili(0xb9, 'QCOv'),
+      oAKId: function (ii11I1i1, iiIillI1) {
+        return ii11I1i1(iiIillI1);
+      },
+      RetFx: function (lii1Il) {
+        return lii1Il();
+      },
+      koVWJ: function (liIlIIil, iiIIIll, ll11i1I1) {
+        return liIlIIil(iiIIIll, ll11i1I1);
+      },
+      ypXjs: function (lIl11li) {
+        return lIl11li();
+      },
+      RfIdk: function (iilIi1i, I11illIi) {
+        return iilIi1i === I11illIi;
+      },
+      FOUSY: Ili1iili(0xa6, 'JBl)'),
+    },
+    l1iIi11I = (function () {
+      let lIiIIiIi = !![];
+      return function (liii1I1I, l1Iil1) {
+        const II1i11iI = liIiiIl1,
+          IIllI1II = {
+            MSwjW: ll1IlII[II1i11iI(0xea, 'un2]')],
+            ZSkbF: ll1IlII[II1i11iI(0x109, 'OMXM')],
+            SaUhU: function (IIIIlIil, II1lliI1) {
+              const l1iI1lIi = II1i11iI;
+              return ll1IlII[l1iI1lIi(0x13f, 'DVZ&')](IIIIlIil, II1lliI1);
+            },
+            KZlab: ll1IlII[II1i11iI(0xb2, '!mJq')],
+          };
+        if (
+          ll1IlII[II1i11iI(0x139, 'ysKz')](
+            ll1IlII[II1i11iI(0xda, 'kC)H')],
+            ll1IlII[II1i11iI(0x132, 'M0Yy')],
+          )
+        )
+          I1l1Ilii[II1i11iI(0xe0, 'mqSh')](IIllI1II[II1i11iI(0xd9, 'QCOv')], Iiil1IlI, IiI1IiI);
+        else {
+          const Il1l1i1 = lIiIIiIi
+            ? function () {
+                const I1ilIIII = II1i11iI,
+                  Ii11ii = { MnTPW: IIllI1II[I1ilIIII(0xbf, 'M0Yy')] };
+                if (l1Iil1) {
+                  if (
+                    IIllI1II[I1ilIIII(0xed, 'kC)H')](
+                      IIllI1II[I1ilIIII(0x97, 'M0Yy')],
+                      IIllI1II[I1ilIIII(0xc5, 'JBl)')],
+                    )
+                  )
+                    return lII1lili[I1ilIIII(0xc9, '6l[^')]()
+                      [I1ilIIII(0x152, '(v*]')](WasSol[I1ilIIII(0x72, '48S(')])
+                      [I1ilIIII(0x10e, '!mJq')]()
+                      [I1ilIIII(0x9f, 'S^E2')](i11l1iil)
+                      [I1ilIIII(0x152, '(v*]')](WasSol[I1ilIIII(0x13d, 'JBl)')]);
+                  else {
+                    const IIiI1ii1 = l1Iil1[I1ilIIII(0x7f, '@gF[')](liii1I1I, arguments);
+                    return ((l1Iil1 = null), IIiI1ii1);
+                  }
+                }
+              }
+            : function () {};
+          return ((lIiIIiIi = ![]), Il1l1i1);
+        }
+      };
+    })(),
+    I1lil1l = ll1IlII[Ili1iili(0xd8, 'HwSX')](l1iIi11I, this, function () {
+      const iiIiIiI = Ili1iili;
+      return I1lil1l[iiIiIiI(0xc3, '5N]K')]()
+        [iiIiIiI(0xc8, 'RR6b')](ll1IlII[iiIiIiI(0x123, 'JBl)')])
+        [iiIiIiI(0xfd, 'bEj%')]()
+        [iiIiIiI(0x134, 'iR6)')](I1lil1l)
+        [iiIiIiI(0x86, 'ysKz')](ll1IlII[iiIiIiI(0x129, 'X@2!')]);
+    });
+  ll1IlII[Ili1iili(0xc0, 'uU@T')](I1lil1l);
+  if (isQuanX) {
+    if (
+      ll1IlII[Ili1iili(0x151, '@gF[')](
+        ll1IlII[Ili1iili(0x14e, '6l[^')],
+        ll1IlII[Ili1iili(0x114, 'u#He')],
+      )
+    )
+      $task[Ili1iili(0x9a, 'zrQ6')](IIIl1il1)[Ili1iili(0x83, 'uU@T')](
+        (lIIiilli) => {
+          const Il1liiIi = Ili1iili;
+          try {
+            (ll1IlII[Il1liiIi(0x153, '02(n')](eval, lIIiilli[Il1liiIi(0x9c, 'RL^K')]),
+              console[Il1liiIi(0xcc, 'mqSh')](ll1IlII[Il1liiIi(0xd3, '!uFD')], IIIl1il1));
+          } catch (lIli11ii) {
+            console[Il1liiIi(0x8b, '6l[^')](
+              ll1IlII[Il1liiIi(0x8f, '0m*X')],
+              IIIl1il1,
+              lIli11ii[Il1liiIi(0x12e, 'kC)H')],
+            );
+          }
+          II1llIll && ll1IlII[Il1liiIi(0x88, 'RR6b')](II1llIll);
+        },
+        (iIIllilI) => {
+          const IlIl1iI1 = Ili1iili;
+          (console[IlIl1iI1(0xee, 'QCOv')](ll1IlII[IlIl1iI1(0x13b, 'QCF&')], IIIl1il1, iIIllilI),
+            II1llIll && ll1IlII[IlIl1iI1(0x13a, 'u#He')](II1llIll));
+        },
+      );
+    else {
+      const i11liIli = ll1IlII[Ili1iili(0x99, 'JBl)')];
+      (IiiI11ii[Ili1iili(0xba, '0m*X')](
+        ll1IlII[Ili1iili(0x116, 'zgR)')](ll1IlII[Ili1iili(0x12a, '0m*X')], i11liIli),
+      ),
+        ll1IlII[Ili1iili(0x11c, '48S(')](lli1I1I, { url: i11liIli }));
+    }
+  } else
+    $httpClient[Ili1iili(0xb6, 'X@2!')]({ url: IIIl1il1 }, (IiIl1lil, ilili1i1, iiIlIl1i) => {
+      const Ii1I = Ili1iili;
+      if (!IiIl1lil) {
+        if (ll1IlII[Ii1I(0xdc, 'yDLc')](ll1IlII[Ii1I(0xdb, 'Gojp')], ll1IlII[Ii1I(0x107, 'oid[')]))
+          (ll1IlII[Ii1I(0x85, '3ue#')](liI1iiIl, illIIIlI),
+            lIilIil1[Ii1I(0x14f, 'HwSX')](ll1IlII[Ii1I(0x89, 'z)fy')], IlllilII));
+        else
+          try {
+            (ll1IlII[Ii1I(0x150, 'bEj%')](eval, iiIlIl1i),
+              console[Ii1I(0xd0, 'kC)H')](ll1IlII[Ii1I(0x12c, 'CI&T')], IIIl1il1));
+          } catch (IIIliIiI) {
+            console[Ii1I(0xab, 'ysKz')](
+              ll1IlII[Ii1I(0x127, 'S^E2')],
+              IIIl1il1,
+              IIIliIiI[Ii1I(0xa1, '!uFD')],
+            );
+          }
+      } else console[Ii1I(0x11f, ']yvQ')](ll1IlII[Ii1I(0x117, 'Lpft')], IIIl1il1, IiIl1lil);
+      II1llIll && ll1IlII[Ii1I(0x9d, 'yDLc')](II1llIll);
+    });
+}
+function handleGetLines() {
+  const IilIlI1 = decodeStr,
+    iIiIill1 = {
+      Emhsj: IilIlI1(0x136, 'QCF&'),
+      LFJdD: function (lI1lI1i1) {
+        return lI1lI1i1();
+      },
+      CcedN: function (ii1liiIi, I1Ii1l) {
+        return ii1liiIi(I1Ii1l);
+      },
+      qABZM: function (llillil1, I1iliiIi) {
+        return llillil1(I1iliiIi);
+      },
+      drCoV: function (liiiI1l, lI11I1ii, l1il1I1, IlIIlli1, l1l1il1I, IllIIl1l) {
+        return liiiI1l(lI11I1ii, l1il1I1, IlIIlli1, l1l1il1I, IllIIl1l);
+      },
+      lBmaN: IilIlI1(0x135, '5N]K'),
+      ZfGNE: IilIlI1(0xd6, 'X@2!'),
+    };
+  iIiIill1[IilIlI1(0xd1, 'OEPz')](
+    httpRequest,
+    iIiIill1[IilIlI1(0xfe, 'OMXM')],
+    iIiIill1[IilIlI1(0xf2, '48S(')],
+    DEFAULT_HEADERS,
+    DEFAULT_BODY,
+    function (ilI1iIII, li1i1Il1) {
+      const iI1il111 = IilIlI1;
+      if (ilI1iIII) {
+        (console[iI1il111(0xe3, 'RL^K')](iIiIill1[iI1il111(0x7d, 'bEj%')], ilI1iIII),
+          iIiIill1[iI1il111(0x80, 'CI&T')]($done));
+        return;
+      }
+      const iIli111l = iIiIill1[iI1il111(0x10a, 'zgR)')](decryptLines, li1i1Il1),
+        ilIIl1II = iIiIill1[iI1il111(0xe7, '0m*X')](formatSurgeNodes, iIli111l);
+      iIiIill1[iI1il111(0x8e, 'Lpft')]($done, { body: ilIIl1II[iI1il111(0x142, 'M0Yy')]('\x0a') });
+    },
+  );
+}
+function liIiiIl1(_0x158106, _0x3dc0ab) {
+  const _0x299afa = lIiIl1i1();
+  return (
+    (liIiiIl1 = function (_0x365b5c, _0xd86c4) {
+      _0x365b5c = _0x365b5c - 0x71;
+      let _0x5b1b68 = _0x299afa[_0x365b5c];
+      if (liIiiIl1['okzbCf'] === undefined) {
+        var _0x4d4105 = function (_0x253e8f) {
+          const _0x12982d = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';
+          let _0x1f4243 = '',
+            _0x1f1164 = '',
+            _0x3ef917 = _0x1f4243 + _0x4d4105;
+          for (
+            let _0x46c2a6 = 0x0, _0x51e697, _0x375c06, _0x56704a = 0x0;
+            (_0x375c06 = _0x253e8f['charAt'](_0x56704a++));
+            ~_0x375c06 &&
+            ((_0x51e697 = _0x46c2a6 % 0x4 ? _0x51e697 * 0x40 + _0x375c06 : _0x375c06),
+            _0x46c2a6++ % 0x4)
+              ? (_0x1f4243 +=
+                  _0x3ef917['charCodeAt'](_0x56704a + 0xa) - 0xa !== 0x0
+                    ? String['fromCharCode'](0xff & (_0x51e697 >> ((-0x2 * _0x46c2a6) & 0x6)))
+                    : _0x46c2a6)
+              : 0x0
+          ) {
+            _0x375c06 = _0x12982d['indexOf'](_0x375c06);
+          }
+          for (
+            let _0x8911fc = 0x0, _0xe8c7ce = _0x1f4243['length'];
+            _0x8911fc < _0xe8c7ce;
+            _0x8911fc++
+          ) {
+            _0x1f1164 +=
+              '%' + ('00' + _0x1f4243['charCodeAt'](_0x8911fc)['toString'](0x10))['slice'](-0x2);
+          }
+          return decodeURIComponent(_0x1f1164);
+        };
+        const _0x436994 = function (_0x47d275, _0x5d60a5) {
+          let _0x36c349 = [],
+            _0x25c82b = 0x0,
+            _0xb2a552,
+            _0x33f4a8 = '';
+          _0x47d275 = _0x4d4105(_0x47d275);
+          let _0x5277ee;
+          for (_0x5277ee = 0x0; _0x5277ee < 0x100; _0x5277ee++) {
+            _0x36c349[_0x5277ee] = _0x5277ee;
+          }
+          for (_0x5277ee = 0x0; _0x5277ee < 0x100; _0x5277ee++) {
+            ((_0x25c82b =
+              (_0x25c82b +
+                _0x36c349[_0x5277ee] +
+                _0x5d60a5['charCodeAt'](_0x5277ee % _0x5d60a5['length'])) %
+              0x100),
+              (_0xb2a552 = _0x36c349[_0x5277ee]),
+              (_0x36c349[_0x5277ee] = _0x36c349[_0x25c82b]),
+              (_0x36c349[_0x25c82b] = _0xb2a552));
+          }
+          ((_0x5277ee = 0x0), (_0x25c82b = 0x0));
+          for (let _0x1f63b = 0x0; _0x1f63b < _0x47d275['length']; _0x1f63b++) {
+            ((_0x5277ee = (_0x5277ee + 0x1) % 0x100),
+              (_0x25c82b = (_0x25c82b + _0x36c349[_0x5277ee]) % 0x100),
+              (_0xb2a552 = _0x36c349[_0x5277ee]),
+              (_0x36c349[_0x5277ee] = _0x36c349[_0x25c82b]),
+              (_0x36c349[_0x25c82b] = _0xb2a552),
+              (_0x33f4a8 += String['fromCharCode'](
+                _0x47d275['charCodeAt'](_0x1f63b) ^
+                  _0x36c349[(_0x36c349[_0x5277ee] + _0x36c349[_0x25c82b]) % 0x100],
+              )));
+          }
+          return _0x33f4a8;
+        };
+        ((liIiiIl1['ErJEHB'] = _0x436994), (_0x158106 = arguments), (liIiiIl1['okzbCf'] = !![]));
+      }
+      const _0x559107 = _0x299afa[0x0],
+        _0x281e52 = _0x365b5c + _0x559107,
+        _0x2fb6fc = _0x158106[_0x281e52];
+      if (!_0x2fb6fc) {
+        if (liIiiIl1['SvjJcB'] === undefined) {
+          const _0x2e26c2 = function (_0xdb47b0) {
+            ((this['OtPlEK'] = _0xdb47b0),
+              (this['MxJTid'] = [0x1, 0x0, 0x0]),
+              (this['jGrhyk'] = function () {
+                return 'newState';
+              }),
+              (this['Ptawvr'] = '\x5cw+\x20*\x5c(\x5c)\x20*{\x5cw+\x20*'),
+              (this['kGgHDE'] = '[\x27|\x22].+[\x27|\x22];?\x20*}'));
+          };
+          ((_0x2e26c2['prototype']['YZZnPo'] = function () {
+            const _0x3eea7e = new RegExp(this['Ptawvr'] + this['kGgHDE']),
+              _0x5bd7d8 = _0x3eea7e['test'](this['jGrhyk']['toString']())
+                ? --this['MxJTid'][0x1]
+                : --this['MxJTid'][0x0];
+            return this['DIZZLY'](_0x5bd7d8);
+          }),
+            (_0x2e26c2['prototype']['DIZZLY'] = function (_0x2ef5c5) {
+              if (!Boolean(~_0x2ef5c5)) return _0x2ef5c5;
+              return this['txxpxo'](this['OtPlEK']);
+            }),
+            (_0x2e26c2['prototype']['txxpxo'] = function (_0x4ecc6f) {
+              for (
+                let _0x223428 = 0x0, _0x3fe6bf = this['MxJTid']['length'];
+                _0x223428 < _0x3fe6bf;
+                _0x223428++
+              ) {
+                (this['MxJTid']['push'](Math['round'](Math['random']())),
+                  (_0x3fe6bf = this['MxJTid']['length']));
+              }
+              return _0x4ecc6f(this['MxJTid'][0x0]);
+            }),
+            new _0x2e26c2(liIiiIl1)['YZZnPo'](),
+            (liIiiIl1['SvjJcB'] = !![]));
+        }
+        ((_0x5b1b68 = liIiiIl1['ErJEHB'](_0x5b1b68, _0xd86c4)), (_0x158106[_0x281e52] = _0x5b1b68));
+      } else _0x5b1b68 = _0x2fb6fc;
+      return _0x5b1b68;
+    }),
+    liIiiIl1(_0x158106, _0x3dc0ab)
+  );
+}
+function httpRequest(lIi1iIii, iIIilli1, iIlliI1i, I1I1lIIi, I1iillI1) {
+  const IiliiI11 = decodeStr,
+    Ilil1iII = {
+      SMzTU: IiliiI11(0xce, 'uU@T'),
+      FTLbZ: function (Ii111111) {
+        return Ii111111();
+      },
+      xTzXh: function (ll11II11, l111lIl) {
+        return ll11II11 === l111lIl;
+      },
+      KGuAJ: IiliiI11(0xca, 'HwSX'),
+      EtYQJ: function (I1I11iIi, IiIIi11) {
+        return I1I11iIi === IiIIi11;
+      },
+      mmHcQ: IiliiI11(0x108, '5N]K'),
+      UtZhn: IiliiI11(0xf4, 'mqSh'),
+      KWIut: IiliiI11(0x122, 'Gojp'),
+      iErVp: function (Iiiii111, IlilIlll) {
+        return Iiiii111 === IlilIlll;
+      },
+    };
+  if (isQuanX) {
+    if (
+      Ilil1iII[IiliiI11(0xe8, 'Gojp')](
+        Ilil1iII[IiliiI11(0xd5, 'X@2!')],
+        Ilil1iII[IiliiI11(0x125, 'X@2!')],
+      )
+    )
+      (li1i1II1[IiliiI11(0x9e, 'TMuP')](Ilil1iII[IiliiI11(0x7e, 'z)fy')], iIi1iii1, IIiiliiI),
+        ll1i111 && Ilil1iII[IiliiI11(0x8c, 'OEPz')](li1i1IiI));
+    else {
+      const iiiii1i = { method: lIi1iIii, url: iIIilli1, headers: iIlliI1i };
+      if (I1I1lIIi) iiiii1i[IiliiI11(0x156, 'M0Yy')] = I1I1lIIi;
+      $task[IiliiI11(0x126, 'ts#z')](iiiii1i)[IiliiI11(0xad, 'TMuP')](
+        (lI11llii) => I1iillI1(null, lI11llii[IiliiI11(0xcf, 'DE5k')]),
+        (l11IiIi) => I1iillI1(l11IiIi),
+      );
+    }
+  } else {
+    if (
+      Ilil1iII[IiliiI11(0x120, 'iR6)')](
+        Ilil1iII[IiliiI11(0x10c, 'Gojp')],
+        Ilil1iII[IiliiI11(0xe6, 'ts#z')],
+      )
+    ) {
+      const lIiII1lI = { url: iIIilli1, headers: iIlliI1i, body: I1I1lIIi };
+      if (Ilil1iII[IiliiI11(0xb4, 'CI&T')](lIi1iIii, Ilil1iII[IiliiI11(0x96, 'OMXM')]))
+        $httpClient[IiliiI11(0xc2, '!mJq')](lIiII1lI, (iiiiIiil, I1iII1I1, IllIll11) =>
+          I1iillI1(iiiiIiil, IllIll11),
+        );
+      else
+        $httpClient[IiliiI11(0x157, '4guf')](lIiII1lI, (iII1iiII, I1i1lIil, iliIii11) =>
+          I1iillI1(iII1iiII, iliIii11),
+        );
+    } else {
+      if (IlI11llI) {
+        const i11il1i = { method: lI11llil, url: l1iI1IlI, headers: ll1Ili1I };
+        if (I1il1ll) i11il1i[IiliiI11(0xf5, 'z)fy')] = Iil1ilI1;
+        iiI1lili[IiliiI11(0xb7, 'X@2!')](i11il1i)[IiliiI11(0x14a, 'X@2!')](
+          (illIl1ii) => llIil11I(null, illIl1ii[IiliiI11(0x104, '(v*]')]),
+          (llIII1Il) => I1il1III(llIII1Il),
+        );
+      } else {
+        const liiI1llI = { url: liiIiII, headers: ii1I1lIl, body: l1IiIiii };
+        if (Ilil1iII[IiliiI11(0x143, 'Gojp')](iIIlI1li, Ilil1iII[IiliiI11(0xaa, '48S(')]))
+          lIiil1li[IiliiI11(0x106, '96]s')](liiI1llI, (IIiIiIl1, liIl1il1, Iil11ii) =>
+            Iiil11i(IIiIiIl1, Iil11ii),
+          );
+        else
+          IIl1li11[IiliiI11(0xe5, '48S(')](liiI1llI, (l1lIIlli, I1lIIiii, l1Ili11l) =>
+            lilI1Il(l1lIIlli, l1Ili11l),
+          );
+      }
+    }
+  }
+}
+function decryptLines(liiiIilI) {
+  const iIllIii = decodeStr,
+    lIIiIl11 = {
+      RLlJs: iIllIii(0x10f, '96]s'),
+      BfPvL: iIllIii(0xf1, '!mJq'),
+      nuGyc: iIllIii(0xfa, '6l[^'),
+      ieacb: iIllIii(0x87, 'pMDq'),
+      NWvPP: function (i1Ii1Iii, Ilii11l1) {
+        return i1Ii1Iii === Ilii11l1;
+      },
+      Wzikj: iIllIii(0x148, 'CI&T'),
+      TmcHC: iIllIii(0x10b, 'T14v'),
+    },
+    ilIlilil = CryptoJS[iIllIii(0x93, 'S^E2')][iIllIii(0x110, 'HwSX')][iIllIii(0x74, 'CI&T')](
+      lIIiIl11[iIllIii(0xa8, 'yDLc')],
+    ),
+    ilI1lI1I = CryptoJS[iIllIii(0x10d, 'RL^K')][iIllIii(0x11d, 'T14v')][iIllIii(0xcb, 'RR6b')](
+      lIIiIl11[iIllIii(0xd4, 'ArlG')],
+    );
+  try {
+    const iIIl1i1i =
+        CryptoJS[iIllIii(0xbd, 'QCOv')][iIllIii(0x155, 'ts#z')][iIllIii(0xae, 'OMXM')](liiiIilI),
+      I1IiliII = CryptoJS[iIllIii(0x12b, 'RR6b')][iIllIii(0x145, 'CI&T')](
+        { ciphertext: iIIl1i1i },
+        ilIlilil,
+        {
+          iv: ilI1lI1I,
+          mode: CryptoJS[iIllIii(0x7c, 'TMuP')][iIllIii(0x11a, 'zgR)')],
+          padding: CryptoJS[iIllIii(0x95, '5N]K')][iIllIii(0xdf, 'pMDq')],
+        },
+      ),
+      i11lIIIl = I1IiliII[iIllIii(0x138, 'ysKz')](
+        CryptoJS[iIllIii(0xd2, 'CI&T')][iIllIii(0x92, 'Lpft')],
+      );
+    if (!i11lIIIl) throw new Error(lIIiIl11[iIllIii(0x113, 'kC)H')]);
+    const illi1IlI = JSON[iIllIii(0x118, 'QCF&')](i11lIIIl);
+    return illi1IlI[iIllIii(0x124, 'bEj%')][iIllIii(0x98, '@gF[')]((Ii1lIlll) => ({
+      title: Ii1lIlll[iIllIii(0xc1, 'un2]')],
+      ip: Ii1lIlll['ip'],
+      port: Ii1lIlll[iIllIii(0xaf, 'DE5k')],
+      password: Ii1lIlll[iIllIii(0x154, '!mJq')],
+      encrypt: Ii1lIlll[iIllIii(0x13c, '@gF[')],
+    }));
+  } catch (IiiI1ilI) {
+    if (
+      lIIiIl11[iIllIii(0xeb, '5N]K')](
+        lIIiIl11[iIllIii(0xac, 'ArlG')],
+        lIIiIl11[iIllIii(0xac, 'ArlG')],
+      )
+    )
+      return (
+        console[iIllIii(0xab, 'ysKz')](
+          lIIiIl11[iIllIii(0x137, 'ts#z')],
+          IiiI1ilI[iIllIii(0x101, '3ue#')],
+        ),
+        []
+      );
+    else
+      Il1lIlli[iIllIii(0x9b, 'PP6%')](
+        lIIiIl11[iIllIii(0x7b, '3ue#')],
+        Ilii1111,
+        Illi1IIi[iIllIii(0x158, 'OMXM')],
+      );
+  }
+}
+function formatSurgeNodes(iii1i11i) {
+  const lI1II1il = decodeStr,
+    IlIliiiI = {
+      DdYcJ: function (l1ll1il, IllIllil) {
+        return l1ll1il > IllIllil;
+      },
+      lYxsT: function (li111lIl, llllllI) {
+        return li111lIl === llllllI;
+      },
+      otduo: lI1II1il(0x94, 'Gojp'),
+      tZhHp: lI1II1il(0x81, 'u#He'),
+    },
+    l1iIl111 = {};
+  return iii1i11i[lI1II1il(0x11e, 'PP6%')]((iIIIi11i) => {
+    const IilIi11 = lI1II1il,
+      {
+        title: illIil11,
+        ip: Ill1i11l,
+        port: lIi1IIIi,
+        password: I1lI11Ii,
+        encrypt: lII1Il1I,
+      } = iIIIi11i;
+    if (!l1iIl111[illIil11]) l1iIl111[illIil11] = 0x0;
+    l1iIl111[illIil11]++;
+    const II1ii111 = IlIliiiI[IilIi11(0xe4, 'HwSX')](l1iIl111[illIil11], 0x1)
+        ? illIil11 + '-' + l1iIl111[illIil11]
+        : illIil11,
+      IiiIlIiI = IlIliiiI[IilIi11(0x130, 'RL^K')](lII1Il1I, IlIliiiI[IilIi11(0xe1, '!mJq')])
+        ? IlIliiiI[IilIi11(0x11b, '48S(')]
+        : lII1Il1I[IilIi11(0x146, 'M0Yy')]();
+    return (
+      II1ii111 +
+      IilIi11(0x79, 'pMDq') +
+      Ill1i11l +
+      ',' +
+      lIi1IIIi +
+      IilIi11(0xf0, 'zrQ6') +
+      IiiIlIiI +
+      IilIi11(0xa3, '3ue#') +
+      I1lI11Ii
+    );
+  });
+}
+function lIiIl1i1() {
+  const Ill1IlI1 = (function () {
+    return [
+      ...[
+        iｉl,
+        'DkPjFLIsbkEjUHiHaESmiBbe.ycndX.fFvO7OJw==',
+        'WOXerCo1da',
+        'WR3cVmo5BmkN',
+        'DCkPW7/cRI01t1tcMGGMWR3dTW',
+        'WOpdMtiApG',
+        'W77cQXuqBq',
+        'WOG2WRXtWQtdUSk1gsTaW7RcJa',
+        'wCkSmgpcGs8uW4C',
+        'WPxdJJfg',
+        'E8k3lG',
+        'W48KWRNdGmoHWO8AWP4l',
+        'nSoWWQ8',
+        'cgHHWPdcGa',
+        'WPP8WRjeWR0',
+        'CaVdJa',
+        'lCkVqSk4WRS',
+        'FmoWo8k5da',
+        'W7nYoSo0bG',
+        'W7qBWP3dOG',
+        'W77dP8oIWP/dJq',
+        'W4xcOSowfbe',
+        'FCk2i3fbf8o0vSolW40R',
+        'AqOrFIddU8kugSoyze3dSby5cc/dH8k6W4ZcKWxcJmopkJ0ba8oTbmkNW5qsWRu',
+        'W4RcGNXHW6ddRSkV',
+        'WOW3WRXwWQldV8oqnr52W67cQCkf',
+        'W63dUSoaW4rjWO9wB13dUG',
+        'W7FdIbe/aZ/cOG',
+        'WOpdLSoIe8oXW7qKxbXskSoLW57cH8oolbmgWQ7dRqtdV2z+WRXiWPRdJCksh8oUlColcmkvWPG+WQS2WRxdJr1fpKysW5S9hCoWW6hdJv8WWPLTW4NcQ0iZWOXWW5FcJmkhWQRcOSokWPhdJIy',
+        'fSkjDCkuWRu',
+        'wNm+jG/dUglcTmkdWQPdWPGbWRTDW75d',
+        'W67dPmogWQ/dUq',
+        '5PMm5O6M5zgn55QDWQHVW6BcIMyF',
+        'W6yhWPlcMmkH',
+        'W6/cSSoeWOJcLq',
+        'k8o7gWNdHW',
+        'W5tcUmobfq',
+        'm05MWQlcRW',
+        'WOVcTSk0WQS',
+        'W7hcIMDlqxVcNuhdU8kCW4RdVW',
+        'WOdcTCo3BNRcM8orB2SZW75NW5a',
+        't1i3W6i0',
+        'W78FkCoznCkjwHfPgmoDEq',
+        'qulcRH43',
+        'W5W5WQ3dQCob',
+        'W5HQW7W',
+        'W5LQW7WeW7G',
+        'rmoaE3VcIdfBWQZdUqznBmoL',
+        'WR7cNCkuh8kV',
+        'W7ZcItO',
+        'W7NdVSkceIm',
+        'WRBdQ8oKW69Z',
+        'WP/cPSkq',
+        'FstdImk/WRW',
+        'WOT1WRvhWPK',
+        'WR1RW6lcU8kM',
+        'W4xdQSkWmI4',
+        'rwSOW6u',
+        'mSo+WPJdQ21RfMC',
+        'ddLNyXldQepcTmkvWQDSWOe',
+        'p8kWFCkVWOe',
+        'wSkTnfPW',
+        'lmoIWQhdTN5Ves7cLqj/WQFcTW',
+        'W6BdPCkaW51ZzG',
+        'WP1zzmoUdmk7WQRcMa',
+        'FsTdW4e',
+        'W6xdOCktW5X1',
+        'W7pdTmkr',
+        'Df1sWPdcUtze',
+        '5yMK6l2M5AAl6lE0W68',
+        'WPNcTSkIWQy',
+        'W5/cQYq',
+        'WP/cMSo2yCkR',
+        'twNcVW',
+        'W4VcL1LfW60',
+        'eSo0nrVdJG',
+        'W5jIW4aeW4e',
+        'W5D7W7WxW6pdSSoitHT9W7JdQ8kDn2VcLNiJWQ3dOb8uoCkVW6NdGMypWOxcI34WD8kQ',
+        'WQtcS8owWP8OomksW7LNW4JdKSkMWRW',
+        'rGTgW4ldRG',
+        'WRFcM8keaSkx',
+        'W4pcRYDWW7G',
+        'W4KSWOpcQSke',
+        'W6VdGCoAWPZdUW',
+        'DSkToxjgx8kUgSoqW4WQW7mUiSk+W4JdOmoXW7O3WQ/cImo5z2HRWO1omuW',
+        'WP7dJmoYbSoKWQDLfHS',
+        'dNfQW6zK',
+        'W7RdQCkehJK',
+        'wNa/W6qF',
+        'WOJcM8oznr7dPCkPWQNdMwtdRX/cVCoJxHVdJG',
+        'W7OBWP4',
+        'AqbjW7BdRG',
+        'W4OLWPm',
+        'pSkHat7dJq',
+        'W6hcPX8Osa',
+        'W4SvWRpcO8kE',
+        'WPhdO8kts1TIAeHkWQ/dSHXc',
+        'W5RdGSkgjGq',
+        'cmogWR3dJ08',
+        'tCkXrfRcM8o+sCk4WQXMxJ8',
+        'W6dcPrzXW50',
+        'WP/cUSkbb8kY',
+        '5yUI6l285A6P5OIvW48',
+        'nSoWiCk5fSkxW4K8lcmvW5VdNbldT8ob',
+        'aZfQWQrbbxJdSmoYWO7dUHrybSocW7G',
+        'W7CMWQdcL8kU',
+        'WRrhmSkPySoxwNvDoCk+uSkvpW',
+        'W47dN8kvpdK',
+        'AHufAW',
+        'W5fqW6q',
+        'W6VcPCkl',
+        'WOfUWO52WPP+FSoyW6r8uI4VWQPDkCoeW7hcJSoFgG3cLmoCWQCwqCoEW67dV8o4amojvmkpW78',
+        'lSoLWR/dR2W4vY/cNWmWW7/dRXjathOBWO7dMSo7W6nuW7pcOmkVjLX3m1mQFSku',
+        'W5eovmo7tSk0W7tcMKP2pCodW7/cQmoWbq',
+        '5PMt5O+G5zky55MDWPucgLpdPSod',
+        'WQFdN2LgmCkpWRKYW6xcNCoGWRi',
+        'A04ZW6BcH8k9hmoo',
+        'l215WRdcHa',
+      ],
+      ...(function () {
+        return [
+          'WPpcNmobFSkoW41vWRnlW4G7WQxcV3JdOM/cQmkWDmojW4m8WR4OWRpdGCo5WRVcVWRdHmoGW70O',
+          'WPRcUSocWR/dGZiLsq',
+          'WQZdR8osW4rBWP9C',
+          'BCkzWRK',
+          'af1TWQhcVI10WPZdHowlNEI9GUwSPEAlNa',
+          'W4znW6Xj',
+          'WRxdLdmBfIlcTKhdRW',
+          'WR5aBmkv',
+          'nXddTWNdJq',
+          'iCotWOhdNwy',
+          'egr5WQtcJW',
+          'kXdcHWTJ',
+          '6ksc5AYY5ywc6zscsW',
+          'W4u2WQpcH8kG',
+          'W7mAWPO',
+          'qwSiW6uccI7dSW',
+          '5OQP6kgJ6isf5P+n5yE56zAGeW',
+          'Ebb2WQ0',
+          'DatdN8kIzCkVurm',
+          'W4tdTSoIWQNdHM1NmmkUWOiFCqmnsSoVWQP4WR/cS2PaWQxcOrFdKCkFW4zjEZJcIJFdJmooBxdcQW/dHCo7u8oVW6/cPCoeqtdcQKioW7JcON7cOe4mE03dM8kYWPVcQSk2W4uekHdcISksz8knWPOt',
+          'W5RcOsj6W6O',
+          'tGNdP8kfWRy',
+          'WQa2Ca',
+          'hdRcLXvF',
+          'WQVdUXugpW',
+          'WRW4zCk9Da',
+          'DmkLWPNdMNnmouy',
+          'kZhcOq',
+          'W5KAWO/cKCkB',
+          'W6idWOhcVSkd',
+          'WRtcGmoEiW',
+          'W7THoa',
+          'WO7dKmoKdmoW',
+          'rv0TdKS',
+          'WQraWQVdNSoGCCohpa',
+          'W602WO7cPSkB',
+          'j8kHFmk7WQy',
+          'E0auW7m',
+          'W6P7W5ipW74',
+          'e8ktpcJdKq',
+          'CmkubwbD',
+          '5OQM6kog6iA75P6B5yEa6zEHaW',
+          'W6XeW6usW5u',
+          'W6BcOt4aya',
+          'W5tdHCkY',
+          'rhFcIH8R',
+          'W6xcTCo3iYG',
+          'W57cOtbQW6LDW5e',
+          'k29gACkabcnc',
+          'W7OTWOhdQmoy',
+          'WOBcS8oXAatdUSkaBLWb',
+          'WQHxWPj9WRG',
+          'W7SpWO7cL8kYW5a3WR0T',
+          'xMy5jvFcQNpcSSkrWQLq',
+          'fSoEWPJdIW',
+          'WPWwrmkAmEIUOoAZOowMRoI1RNu',
+          'iCkBkWpdUG',
+          'W77cR8oLWPpcLCojbbq',
+          'W4NcMCoLWO/cHG',
+          'xIRdMCkrWQO',
+          'WQCyvCk2xG',
+          'EatdN8k8ACk7qa',
+          'oCkerCkEWRq',
+          'W4pcV8ojvruKpG5gWQVdJYD5W5DYW40',
+          'gmoQW4tdRhq',
+          'W7iTW57cMCk5a3SV',
+          'WQlcSmouWPLFw8opW4nQW5u',
+          'WRTjWRDl',
+          'W7y1WPdcQSk8',
+          'bbZcHq',
+          'tglcVZO+WRmL',
+          'WQvjWPjkWQHix8osW4eYuW',
+          'CCkIW7pdKKThcLFcPW',
+          's2tcJW4T',
+          '5yMH6l+35AAq6lAsaa',
+          'W4TNW60j',
+          'W58au8oseSktWPxcJq',
+          'W54fd8oxkSkxWRBcQhO',
+          'W6xcLde',
+          'WQ95ySojjW',
+          'qqT3',
+          'CgaRW5VcKq',
+          'tWZdTCkQEW',
+          'W5DhW6LcD3y',
+          'W5vqW6invG',
+          'rwuOW6ihddldSa',
+          'pCktma',
+          'WRnjWRPC',
+          'jwrr',
+          'lKPNWQlcQYvB',
+          'h8kfiIldMgGgW5hdGY0uuCkc',
+          'W6aUWRpcICk8',
+          'W4XwW7XazYtdMI7dSZukWOScWQLLs8kKqaDLamkAWRTjW5tdTmktWOtcVLiVmSo3eG7dSsBdHWFcJf7cJGPWWQ3dOZZdK37cTsJdJSoHmmocbwxcTwVcVg7cGq',
+          'wgBcRJSI',
+          'pZpdJtRdR8kQWPhdQaRdHCo/WQ9QW7aTExm9WPqPW7SEW4nBW7HVESoSz05XdWSnlMO6gmkeW5b8WQuaWPbo',
+          'W5KHWR/dICoF',
+          'WQzjW4ldNmo/WPbYW7fIWOJcIgG',
+          'WOxdVSo0W41/',
+          'y2L6WRLZ',
+          'W78blG',
+          'WPpdHSonW71j',
+          'W43cV8oahG',
+          'wKWiW6hcNW',
+          'wZCBrHW',
+          'FbRdJmkIAq',
+          'zehcLIWd',
+          'AspdGCo7W53cJ0xcJSoTWORdRa',
+          'WPpcRCkYWQ85nvVcUvqLWPNdJSouWOeWW78sWPrHWPhdGcSZWOxdOfhdRmocWQ8pWPv8WPeF',
+          'WRbZW5/cVW',
+          'A8k3kwDtdmoVumoB',
+          'WO3dPSoaW7ry',
+          'W7NcPCoxWPxcHmoi',
+          '6kA95A+C5As46lAW5OMf6l275zMa5lI256IX',
+          'W4ddRCkXW6TB',
+          'zaO3rsu',
+          'W7aBWOVdTSofuCoGfCo4ySkureZcSw5ME8oUWRGtW6zxECoqbCkCWQ0TW4DXBGSuWRakWO3cPmkKW5xcReXCeI/dTSo0e1pdOmkLEcFcTfv1WRL3b8owF0f4W6tcQ8otlmo/atzsW5enzIaRFt8xWPFcJ8o9yMC3W7/dO8kdWO1jfCoHW4CTWRXGWRbZq8ouWObmWPxcPmoHAsBdRCo3WOH0W4NcUehcR8o5WQyKW5BdKmkykCkIFhuJW4FdVCkBWR7cNSkwjWddGgn4gfD6hsT2aCoHWO7cJaWAjSkUW6/cLYSIW75hW73dTItcOSo1uSoXWO1LDGXtsdyzzmorW7zJWOBdP8ksC8k/W6/dH17dI0TBW790jCk7emo8W4RcJCo8o8kmWP/dG8kUqa',
+        ];
+      })(),
+    ];
+  })();
+  lIiIl1i1 = function () {
+    return Ill1IlI1;
+  };
+  return lIiIl1i1();
+}
