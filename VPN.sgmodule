@@ -1,4 +1,4 @@
-#!name=oVPN
+#!name=VPN
 #!desc=某v自动更新并获取最新节点，适配surge，loon，quantumults
 
 #手动添加策略组[Proxy Group]
