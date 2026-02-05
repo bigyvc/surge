@@ -1,5 +1,5 @@
-!name=NS论坛签到（NodeSeek）
-!desc=抓取 getInfo 请求头并持久化，定时重放 attendance 签到（由 QX 脚本转换）
+#!name=NS论坛签到（NodeSeek）
+#!desc=抓取 getInfo 请求头并持久化，定时重放 attendance 签到（由 QX 脚本转换）
 
 [MITM]
 hostname = %APPEND% www.nodeseek.com
