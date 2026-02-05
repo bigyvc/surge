@@ -1,7 +1,9 @@
-// NS签到 Surge
-// 功能：抓 getInfo 的请求头保存；定时重放 attendance 签到
+// 2026.1.17  QX -> Surge（合并通知版）
+// - 抓 getInfo 请求头保存后：主动请求 getInfo 并弹出用户信息
+// - 签到成功后：只弹 1 条通知（获得X鸡腿 + 当前余额Y + 可选用户名/ID）
 
 const NS_HEADER_KEY = "NS_NodeseekHeaders";
+const NS_UID_KEY = "NS_NodeseekUID";
 const isGetHeader = typeof $request !== "undefined";
 
 const NEED_KEYS = [
@@ -31,7 +33,6 @@ function pickNeedHeaders(src = {}) {
   return dst;
 }
 
-// Surge KV 兼容封装
 const $store = {
   set: (k, v) => $persistentStore.write(v, k),
   get: (k) => $persistentStore.read(k),
@@ -41,46 +42,52 @@ function notify(title, subtitle, body) {
   $notification.post(title, subtitle || "", body || "");
 }
 
-if (isGetHeader) {
-  const allHeaders = $request.headers || {};
-  const picked = pickNeedHeaders(allHeaders);
-
-  if (!picked || Object.keys(picked).length === 0) {
-    console.log("[NS] picked headers empty:", JSON.stringify(allHeaders));
-    notify("NS Headers 获取失败", "", "未获取到指定请求头，请重新再试一次。");
-    $done({});
-  } else {
-    const ok = $store.set(NS_HEADER_KEY, JSON.stringify(picked));
-    console.log("[NS] saved picked headers:", JSON.stringify(picked));
-    if (ok) {
-      notify("NS Headers 获取成功", "", "指定请求头已持久化保存。");
-    } else {
-      notify("NS Headers 保存失败", "", "写入持久化存储失败，请检查配置。");
-    }
-    $done({});
-  }
-} else {
-  const raw = $store.get(NS_HEADER_KEY);
-  if (!raw) {
-    notify("NS签到结果", "无法签到", "本地没有已保存的请求头，请先抓包访问一次个人页面。");
-    $done();
-    return;
-  }
-
-  let savedHeaders = {};
+function safeJsonParse(s) {
   try {
-    savedHeaders = JSON.parse(raw) || {};
-  } catch (e) {
-    console.log("[NS] parse saved headers failed:", e);
-    notify("NS签到结果", "无法签到", "本地保存的请求头数据损坏，请重新访问一次个人页面。");
-    $done();
-    return;
+    return JSON.parse(s);
+  } catch (_) {
+    return null;
   }
+}
 
-  const url = "https://www.nodeseek.com/api/attendance?random=true";
-  const method = "POST";
+function extractUIDFromUrl(url) {
+  const m = String(url || "").match(/\/api\/account\/getInfo\/(\d+)\?readme=1$/);
+  return m ? m[1] : "";
+}
 
-  const headers = {
+function extractChickenLegs(objOrText) {
+  const text =
+    typeof objOrText === "string"
+      ? objOrText
+      : JSON.stringify(objOrText || {}) || "";
+
+  const m = text.match(/(\d+)\s*鸡腿/);
+  if (m) return Number(m[1]);
+
+  const obj = typeof objOrText === "object" ? objOrText : safeJsonParse(text);
+  if (!obj) return null;
+
+  const candidates = [
+    obj?.data?.chicken,
+    obj?.data?.chickenLegs,
+    obj?.data?.drumstick,
+    obj?.data?.reward?.chicken,
+    obj?.data?.reward?.chickenLegs,
+    obj?.reward?.chicken,
+    obj?.reward?.chickenLegs,
+    obj?.gain,
+    obj?.data?.gain,
+  ];
+
+  for (const v of candidates) {
+    if (typeof v === "number" && Number.isFinite(v)) return v;
+    if (typeof v === "string" && v.trim() !== "" && !Number.isNaN(Number(v))) return Number(v);
+  }
+  return null;
+}
+
+function buildHeaders(savedHeaders = {}) {
+  return {
     Connection: savedHeaders["Connection"] || "keep-alive",
     "Accept-Encoding": savedHeaders["Accept-Encoding"] || "gzip, deflate, br",
     Priority: savedHeaders["Priority"] || "u=3, i",
@@ -98,46 +105,176 @@ if (isGetHeader) {
     "Accept-Language": savedHeaders["Accept-Language"] || "zh-CN,zh-Hans;q=0.9",
     Accept: savedHeaders["Accept"] || "*/*",
   };
+}
 
-  const body = "";
+function parseUserInfo(obj, fallbackUid) {
+  const d = obj?.data ?? obj ?? {};
+  const username = d?.username || d?.userName || d?.name || d?.nickname || "";
+  const id = d?.id || d?.uid || fallbackUid || "";
+  const level = d?.level || d?.lv || "";
+  const chicken = extractChickenLegs(obj);
+  const msg = obj?.message ? String(obj.message) : "";
+  return { username, id, level, chicken, msg, raw: d };
+}
 
-  const req = { url, method, headers, body };
+function fetchUserInfo(headersObj, uid, cb) {
+  if (!uid) return cb(new Error("missing uid"));
+  const url = `https://www.nodeseek.com/api/account/getInfo/${uid}?readme=1`;
+  const headers = buildHeaders(headersObj);
 
-  $httpClient.request(req, (error, response, data) => {
-    if (error) {
-      const err = String(error);
-      console.log("[NS签到] request error:", err);
-      notify("NS签到结果", "请求错误", err);
+  $httpClient.get({ url, headers }, (err, resp, data) => {
+    if (err) return cb(err);
+    const status = resp?.status || 0;
+    const obj = safeJsonParse(data || "");
+    if (!obj) return cb(new Error(`parse failed, status=${status}`));
+    cb(null, obj);
+  });
+}
+
+/* ===================== 抓头并弹用户信息 ===================== */
+if (isGetHeader) {
+  const allHeaders = $request.headers || {};
+  const picked = pickNeedHeaders(allHeaders);
+  const uid = extractUIDFromUrl($request.url);
+
+  if (!picked || Object.keys(picked).length === 0) {
+    notify("NS Headers 获取失败", "", "未获取到指定请求头，请重新再试一次。");
+    $done({});
+    return;
+  }
+
+  const ok1 = $store.set(NS_HEADER_KEY, JSON.stringify(picked));
+  if (uid) $store.set(NS_UID_KEY, String(uid));
+
+  if (!ok1) {
+    notify("NS Headers 保存失败", "", "写入持久化存储失败，请检查配置。");
+    $done({});
+    return;
+  }
+
+  // 保存成功提示
+  notify("NS Headers 获取成功", "", uid ? `请求头已保存（UID: ${uid}）` : "请求头已保存（未解析到UID）");
+
+  // 立刻拉一次 getInfo 弹用户信息
+  if (!uid) {
+    notify("NS 用户信息", "获取失败", "未能从 URL 中解析到 UID。");
+    $done({});
+    return;
+  }
+
+  fetchUserInfo(picked, uid, (err, obj) => {
+    if (err) {
+      notify("NS 用户信息", "请求错误", String(err));
+      return;
+    }
+    const info = parseUserInfo(obj, uid);
+    const lines = [];
+    if (info.username) lines.push(`用户：${info.username}`);
+    if (info.id) lines.push(`ID：${info.id}`);
+    if (info.level !== "") lines.push(`等级：${info.level}`);
+    if (info.chicken !== null) lines.push(`鸡腿：${info.chicken}`);
+    if (info.msg) lines.push(`提示：${info.msg}`);
+    if (lines.length === 0) lines.push(`data：${JSON.stringify(info.raw).slice(0, 200)}`);
+    notify("NS 用户信息", "已获取", lines.join("\n"));
+  });
+
+  $done({});
+  return;
+}
+
+/* ===================== 定时签到：成功只弹 1 条通知 ===================== */
+const raw = $store.get(NS_HEADER_KEY);
+if (!raw) {
+  notify("NS签到结果", "无法签到", "本地没有已保存的请求头，请先抓包访问一次个人页面。");
+  $done();
+  return;
+}
+
+let savedHeaders = {};
+try {
+  savedHeaders = JSON.parse(raw) || {};
+} catch (e) {
+  notify("NS签到结果", "无法签到", "本地保存的请求头数据损坏，请重新访问一次个人页面。");
+  $done();
+  return;
+}
+
+const uid = $store.get(NS_UID_KEY) || "";
+
+const signUrl = "https://www.nodeseek.com/api/attendance?random=true";
+const signReq = {
+  url: signUrl,
+  method: "POST",
+  headers: buildHeaders(savedHeaders),
+  body: "",
+};
+
+$httpClient.request(signReq, (error, response, data) => {
+  if (error) {
+    notify("NS签到结果", "请求错误", String(error));
+    $done();
+    return;
+  }
+
+  const status = response?.status || 0;
+  const respBody = data || "";
+  const signObj = safeJsonParse(respBody);
+  const signMsg = signObj?.message ? String(signObj.message) : "";
+  const gain = signObj ? extractChickenLegs(signObj) : extractChickenLegs(respBody);
+
+  // 非 2xx 保留原提示
+  if (!(status >= 200 && status < 300)) {
+    if (status === 403) {
+      notify(
+        "NS签到结果",
+        "403 风控",
+        `暂时被风控，稍后再试${signMsg ? `\n内容：${signMsg}` : ""}`
+      );
+    } else if (status === 500) {
+      notify("NS签到结果", "500 服务器错误", signMsg || respBody || "服务器错误(500)，无返回内容");
+    } else {
+      notify("NS签到结果", `请求异常 ${status}`, signMsg || respBody || `请求失败，status=${status}`);
+    }
+    $done();
+    return;
+  }
+
+  // 2xx：合并通知（签到结果 + 余额）
+  const gainText = gain !== null ? `获得：${gain} 鸡腿` : "获得：未识别到鸡腿数量";
+
+  // 如果没有 uid，就只能提示先抓个人页
+  if (!uid) {
+    const body = `${gainText}${signMsg ? `\n${signMsg}` : ""}\n\n（未保存UID，无法查询余额：请进入个人信息页一次）`;
+    notify("NS签到结果", "已签到", body);
+    $done();
+    return;
+  }
+
+  // 拉取余额后再弹一次（✅只弹这一条）
+  fetchUserInfo(savedHeaders, uid, (err, infoObj) => {
+    if (err) {
+      // 余额查不到也别浪费：仍然合并弹一个（带错误原因）
+      const body = `${gainText}${signMsg ? `\n${signMsg}` : ""}\n\n余额查询失败：${String(err)}`;
+      notify("NS签到结果", "已签到", body);
       $done();
       return;
     }
 
-    const status = response?.status || 0;
-    const respBody = data || "";
+    const info = parseUserInfo(infoObj, uid);
+    const balanceText =
+      info.chicken !== null ? `当前鸡腿：${info.chicken}` : "当前鸡腿：未识别到余额";
 
-    let msg = "";
-    try {
-      const obj = JSON.parse(respBody);
-      msg = obj?.message ? String(obj.message) : "";
-      console.log(`[NS签到] parsed message: ${msg || "(empty)"}`);
-    } catch (e) {
-      console.log("[NS签到] JSON parse failed:", e);
-    }
+    const head = [];
+    if (info.username) head.push(`用户：${info.username}`);
+    if (info.id) head.push(`ID：${info.id}`);
 
-    if (status === 403) {
-      const content = `暂时被风控，稍后再试\n${msg ? `内容：${msg}` : `响应体：${respBody}`}`;
-      notify("NS签到结果", "403 风控", content);
-    } else if (status === 500) {
-      const content = msg || respBody || "服务器错误(500)，无返回内容";
-      notify("NS签到结果", "500 服务器错误", content);
-    } else if (status >= 200 && status < 300) {
-      const content = msg || "NS签到成功，但未返回 message";
-      notify("NS签到结果", "签到成功", content);
-    } else {
-      const content = msg || respBody || `请求失败，status=${status}`;
-      notify("NS签到结果", `请求异常 ${status}`, content);
-    }
+    const bodyLines = [];
+    if (head.length) bodyLines.push(head.join("  "));
+    bodyLines.push(gainText);
+    bodyLines.push(balanceText);
+    if (signMsg) bodyLines.push(`签到提示：${signMsg}`);
 
+    notify("NS签到结果", "已签到", bodyLines.join("\n"));
     $done();
   });
-}
+});
