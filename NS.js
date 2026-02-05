@@ -133,6 +133,7 @@ function main() {
   }
 
   /* ===================== 抓头并弹用户信息 ===================== */
+  /* ===================== 抓头并弹用户信息（修复：done 太早导致不弹用户信息） ===================== */
   if (isGetHeader) {
     const allHeaders = $request.headers || {};
     const picked = pickNeedHeaders(allHeaders);
@@ -153,7 +154,12 @@ function main() {
       return;
     }
 
-    notify("NS Headers 获取成功", "", uid ? `请求头已保存（UID: ${uid}）` : "请求头已保存（未解析到UID）");
+    // 先提示保存成功
+    notify(
+      "NS Headers 获取成功",
+      "",
+      uid ? `请求头已保存（UID: ${uid}）` : "请求头已保存（未解析到UID）"
+    );
 
     if (!uid) {
       notify("NS 用户信息", "获取失败", "未能从 URL 中解析到 UID。");
@@ -161,11 +167,14 @@ function main() {
       return;
     }
 
+    // ✅ 关键：等用户信息请求完成后再 done
     fetchUserInfo(picked, uid, (err, obj) => {
       if (err) {
         notify("NS 用户信息", "请求错误", String(err));
+        $done({});
         return;
       }
+
       const info = parseUserInfo(obj, uid);
       const lines = [];
       if (info.username) lines.push(`用户：${info.username}`);
@@ -174,10 +183,11 @@ function main() {
       if (info.chicken !== null) lines.push(`鸡腿：${info.chicken}`);
       if (info.msg) lines.push(`提示：${info.msg}`);
       if (lines.length === 0) lines.push(`data：${JSON.stringify(info.raw).slice(0, 200)}`);
+
       notify("NS 用户信息", "已获取", lines.join("\n"));
+      $done({});
     });
 
-    $done({});
     return;
   }
 
