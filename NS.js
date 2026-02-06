@@ -279,61 +279,116 @@ function main() {
     return;
   }
 
-  // ========== MODE 2: CHECK-IN ==========
-  const raw = Env.read(NS_HEADER_KEY);
-  if (!raw) {
-    Env.notify("NS签到结果", "无法签到", "本地没有已保存的请求头，请先抓包访问一次个人页面。");
-    Env.done();
-    return;
-  }
+// ========== MODE 2: CHECK-IN ==========
+const raw = Env.read(NS_HEADER_KEY);
+if (!raw) {
+  Env.notify("NS签到结果", "无法签到", "本地没有已保存的请求头，请先抓包访问一次个人页面。");
+  Env.done();
+  return;
+}
 
-  let savedHeaders = {};
-  try {
-    savedHeaders = JSON.parse(raw) || {};
-  } catch (e) {
-    Env.notify("NS签到结果", "无法签到", "本地保存的请求头数据损坏，请重新访问一次个人页面。");
-    Env.done();
-    return;
-  }
+let savedHeaders = {};
+try {
+  savedHeaders = JSON.parse(raw) || {};
+} catch (e) {
+  Env.notify("NS签到结果", "无法签到", "本地保存的请求头数据损坏，请重新访问一次个人页面。");
+  Env.done();
+  return;
+}
 
-  const uid = Env.read(NS_UID_KEY) || "";
+const uid = Env.read(NS_UID_KEY) || "";
 
-  const signUrl = "https://www.nodeseek.com/api/attendance?random=true";
-  const signReq = {
+// ✅ 先固定5(random=false)，失败再随机(random=true)
+const SIGN_URL_FIXED = "https://www.nodeseek.com/api/attendance?random=false";
+const SIGN_URL_RANDOM = "https://www.nodeseek.com/api/attendance?random=true";
+
+function trySign(signUrl) {
+  const req = {
     url: signUrl,
     headers: buildHeaders(savedHeaders),
     body: "",
   };
 
-  Env.httpPost(signReq)
-    .then((resp) => {
-      const status = resp.status || 0;
-      const respBody = resp.body || "";
-      const signObj = safeJsonParse(respBody);
-      const signMsg = signObj?.message ? String(signObj.message) : "";
-      const gain = signObj ? extractChickenLegs(signObj) : extractChickenLegs(respBody);
+  return Env.httpPost(req).then((resp) => {
+    const status = resp.status || 0;
+    const body = resp.body || "";
+    const obj = safeJsonParse(body);
 
-      if (!(status >= 200 && status < 300)) {
-        if (status === 403) {
-          Env.notify("NS签到结果", "403 风控", `暂时被风控，稍后再试${signMsg ? `\n内容：${signMsg}` : ""}`);
-        } else if (status === 500) {
-          Env.notify("NS签到结果", "500 服务器错误", signMsg || respBody || "服务器错误(500)，无返回内容");
-        } else {
-          Env.notify("NS签到结果", `请求异常 ${status}`, signMsg || respBody || `请求失败，status=${status}`);
-        }
-        return null; // stop
-      }
+    // 判定是否“成功可用”：
+    // 1) 必须 2xx
+    // 2) 返回体能解析为 JSON（否则认为失败回退）
+    if (!(status >= 200 && status < 300)) {
+      const err = new Error(`status=${status}`);
+      err._status = status;
+      err._body = body;
+      err._obj = obj;
+      throw err;
+    }
+    if (!obj) {
+      const err = new Error(`invalid json, status=${status}`);
+      err._status = status;
+      err._body = body;
+      throw err;
+    }
 
-      const gainText = gain !== null ? `获得：${gain} 鸡腿` : "获得：未识别到鸡腿数量";
+    return { status, body, obj, signUrl };
+  });
+}
 
-      if (!uid) {
-        const body = `${gainText}${signMsg ? `\n签到提示：${signMsg}` : ""}\n\n（未保存UID，无法查询余额：请进入个人信息页一次）`;
-        Env.notify("NS签到结果", "已签到", body);
-        return null;
-      }
+function buildFailNotify(title, status, msg, body) {
+  // 保留你原来那套提示逻辑
+  if (status === 403) {
+    return { title, subtitle: "403 风控", content: `暂时被风控，稍后再试${msg ? `\n内容：${msg}` : ""}` };
+  }
+  if (status === 500) {
+    return { title, subtitle: "500 服务器错误", content: msg || body || "服务器错误(500)，无返回内容" };
+  }
+  return { title, subtitle: `请求异常 ${status}`, content: msg || body || `请求失败，status=${status}` };
+}
 
-      // 成功：查询余额并合并成一条通知
-      return fetchUserInfo(savedHeaders, uid).then((infoObj) => {
+trySign(SIGN_URL_FIXED)
+  .catch((e1) => {
+    // 固定模式失败 -> 回退随机模式
+    return trySign(SIGN_URL_RANDOM).catch((e2) => {
+      // 两次都失败：优先用第二次错误（更接近最终结果），但也把第一次失败信息拼上
+      const status2 = e2?._status || 0;
+      const body2 = e2?._body || "";
+      const obj2 = e2?._obj || safeJsonParse(body2) || {};
+      const msg2 = obj2?.message ? String(obj2.message) : "";
+
+      const status1 = e1?._status || 0;
+      const body1 = e1?._body || "";
+      const obj1 = e1?._obj || safeJsonParse(body1) || {};
+      const msg1 = obj1?.message ? String(obj1.message) : "";
+
+      const n2 = buildFailNotify("NS签到结果", status2, msg2, body2);
+      const extra = `\n\n固定5尝试失败：${status1}${msg1 ? `（${msg1}）` : ""}`;
+      Env.notify(n2.title, n2.subtitle, n2.content + extra);
+      return null; // stop
+    });
+  })
+  .then((result) => {
+    if (!result) return;
+
+    const { status, body, obj, signUrl } = result;
+    const signMsg = obj?.message ? String(obj.message) : "";
+    const gain = extractChickenLegs(obj) ?? extractChickenLegs(body);
+
+    const modeText = signUrl.includes("random=false") ? "固定5" : "随机";
+    const gainText = gain !== null ? `获得：${gain} 鸡腿` : "获得：未识别到鸡腿数量";
+
+    if (!uid) {
+      const content =
+        `${gainText}\n模式：${modeText}` +
+        (signMsg ? `\n签到提示：${signMsg}` : "") +
+        `\n\n（未保存UID，无法查询余额：请进入个人信息页一次）`;
+      Env.notify("NS签到结果", "已签到", content);
+      return;
+    }
+
+    // 成功：查询余额并合并通知（只弹一次）
+    return fetchUserInfo(savedHeaders, uid)
+      .then((infoObj) => {
         const info = parseUserInfo(infoObj, uid);
         const balanceText = info.chicken !== null ? `当前鸡腿：${info.chicken}` : "当前鸡腿：未识别到余额";
 
@@ -345,20 +400,25 @@ function main() {
         if (head.length) lines.push(head.join("  "));
         lines.push(gainText);
         lines.push(balanceText);
+        lines.push(`模式：${modeText}`);
         if (signMsg) lines.push(`签到提示：${signMsg}`);
 
         Env.notify("NS签到结果", "已签到", lines.join("\n"));
-      }).catch((e) => {
-        const body = `${gainText}${signMsg ? `\n签到提示：${signMsg}` : ""}\n\n余额查询失败：${String(e)}`;
-        Env.notify("NS签到结果", "已签到", body);
+      })
+      .catch((e) => {
+        const content =
+          `${gainText}\n模式：${modeText}` +
+          (signMsg ? `\n签到提示：${signMsg}` : "") +
+          `\n\n余额查询失败：${String(e)}`;
+        Env.notify("NS签到结果", "已签到", content);
       });
-    })
-    .catch((e) => {
-      Env.notify("NS签到结果", "请求错误", String(e));
-    })
-    .finally(() => {
-      Env.done();
-    });
+  })
+  .catch((e) => {
+    Env.notify("NS签到结果", "请求错误", String(e));
+  })
+  .finally(() => {
+    Env.done();
+  });
 }
 
 main();
