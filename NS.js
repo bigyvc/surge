@@ -1,12 +1,118 @@
-// 2026.1.17 QX -> Surge（合并通知版，修复 Surge 顶层 return 报错）
-// - 抓 getInfo 请求头保存后：主动请求 getInfo 并弹出用户信息
-// - 签到成功后：只弹 1 条通知（获得X鸡腿 + 当前余额Y + 可选用户名/ID）
+/**
+ * NS论坛签到 - Surge / Loon / Shadowrocket 通用版
+ * 2026.02.06
+ *
+ * 需要配置：
+ * - rewrite 捕获 header：^https:\/\/www\.nodeseek\.com\/api\/account\/getInfo\/\d+\?readme=1.*$
+ * - cron 定时签到：例如 1 0 * * *
+ * - MITM: www.nodeseek.com
+ */
 
 function main() {
   const NS_HEADER_KEY = "NS_NodeseekHeaders";
   const NS_UID_KEY = "NS_NodeseekUID";
   const isGetHeader = typeof $request !== "undefined";
 
+  // ========== ENV ADAPTER ==========
+  const Env = (() => {
+    const isSurge = typeof $httpClient !== "undefined" && typeof $persistentStore !== "undefined";
+    const isLoon = typeof $httpClient !== "undefined" && typeof $loon !== "undefined";
+    const isQX = typeof $task !== "undefined" && typeof $prefs !== "undefined";
+    const isSR = typeof $task !== "undefined" && typeof $prefs !== "undefined" && !isQX; // SR 也长得像 QX
+
+    function read(key) {
+      if (typeof $persistentStore !== "undefined") return $persistentStore.read(key);
+      if (typeof $prefs !== "undefined") return $prefs.valueForKey(key);
+      return null;
+    }
+
+    function write(val, key) {
+      if (typeof $persistentStore !== "undefined") return $persistentStore.write(val, key);
+      if (typeof $prefs !== "undefined") return $prefs.setValueForKey(val, key);
+      return false;
+    }
+
+    function notify(title, subtitle, body) {
+      if (typeof $notification !== "undefined" && typeof $notification.post === "function") {
+        $notification.post(title, subtitle || "", body || "");
+      } else if (typeof $notify !== "undefined") {
+        $notify(title, subtitle || "", body || "");
+      } else {
+        // last resort
+        console.log(`[notify] ${title} | ${subtitle} | ${body}`);
+      }
+    }
+
+    function done(resp) {
+      if (typeof $done === "function") $done(resp);
+    }
+
+    // HTTP unify:
+    // returns Promise<{status, headers, body}>
+    function httpGet(options) {
+      return httpRequest({ ...options, method: "GET" });
+    }
+    function httpPost(options) {
+      return httpRequest({ ...options, method: "POST" });
+    }
+
+    function httpRequest(options) {
+      // Shadowrocket / QuantumultX: $task.fetch
+      if (typeof $task !== "undefined" && typeof $task.fetch === "function") {
+        const req = {
+          url: options.url,
+          method: options.method || "GET",
+          headers: options.headers || {},
+          body: options.body || "",
+        };
+        return $task.fetch(req).then((resp) => {
+          return {
+            status: resp.statusCode || resp.status || 0,
+            headers: resp.headers || {},
+            body: resp.body || "",
+          };
+        });
+      }
+
+      // Surge / Loon: $httpClient.get/post (没有 request 的环境很多)
+      if (typeof $httpClient !== "undefined") {
+        return new Promise((resolve, reject) => {
+          const cb = (err, resp, data) => {
+            if (err) return reject(err);
+            resolve({
+              status: resp && (resp.status || resp.statusCode) ? (resp.status || resp.statusCode) : 0,
+              headers: (resp && resp.headers) || {},
+              body: data || "",
+            });
+          };
+
+          const req = {
+            url: options.url,
+            headers: options.headers || {},
+            body: options.body || "",
+          };
+
+          const m = (options.method || "GET").toUpperCase();
+          if (m === "POST") {
+            if (typeof $httpClient.post === "function") return $httpClient.post(req, cb);
+            // 兜底：少数环境有 request
+            if (typeof $httpClient.request === "function") return $httpClient.request({ ...req, method: "POST" }, cb);
+            return reject(new Error("No $httpClient.post/request available"));
+          } else {
+            if (typeof $httpClient.get === "function") return $httpClient.get(req, cb);
+            if (typeof $httpClient.request === "function") return $httpClient.request({ ...req, method: "GET" }, cb);
+            return reject(new Error("No $httpClient.get/request available"));
+          }
+        });
+      }
+
+      return Promise.reject(new Error("No HTTP method available in this environment."));
+    }
+
+    return { isSurge, isLoon, isQX, isSR, read, write, notify, done, httpGet, httpPost };
+  })();
+
+  // ========== UTILS ==========
   const NEED_KEYS = [
     "Connection",
     "Accept-Encoding",
@@ -34,13 +140,11 @@ function main() {
     return dst;
   }
 
-  const $store = {
-    set: (k, v) => $persistentStore.write(v, k),
-    get: (k) => $persistentStore.read(k),
-  };
-
-  function notify(title, subtitle, body) {
-    $notification.post(title, subtitle || "", body || "");
+  // 放宽匹配：readme=1 不一定在最后
+  function extractUIDFromUrl(url) {
+    const u = String(url || "");
+    const m = u.match(/\/api\/account\/getInfo\/(\d+)\?[^#]*readme=1/i);
+    return m ? m[1] : "";
   }
 
   function safeJsonParse(s) {
@@ -49,11 +153,6 @@ function main() {
     } catch (_) {
       return null;
     }
-  }
-
-  function extractUIDFromUrl(url) {
-    const m = String(url || "").match(/\/api\/account\/getInfo\/(\d+)\?readme=1$/);
-    return m ? m[1] : "";
   }
 
   function extractChickenLegs(objOrText) {
@@ -118,84 +217,73 @@ function main() {
     return { username, id, level, chicken, msg, raw: d };
   }
 
-  function fetchUserInfo(headersObj, uid, cb) {
-    if (!uid) return cb(new Error("missing uid"));
+  function fetchUserInfo(headersObj, uid) {
     const url = `https://www.nodeseek.com/api/account/getInfo/${uid}?readme=1`;
     const headers = buildHeaders(headersObj);
-
-    $httpClient.get({ url, headers }, (err, resp, data) => {
-      if (err) return cb(err);
-      const status = resp?.status || 0;
-      const obj = safeJsonParse(data || "");
-      if (!obj) return cb(new Error(`parse failed, status=${status}`));
-      cb(null, obj);
+    return Env.httpGet({ url, headers }).then((r) => {
+      const obj = safeJsonParse(r.body || "");
+      if (!obj) throw new Error(`getInfo 解析失败，status=${r.status}`);
+      return obj;
     });
   }
 
-  /* ===================== 抓头并弹用户信息 ===================== */
-  /* ===================== 抓头并弹用户信息（修复：done 太早导致不弹用户信息） ===================== */
+  // ========== MODE 1: CAPTURE HEADERS ==========
   if (isGetHeader) {
-    const allHeaders = $request.headers || {};
+    const allHeaders = ($request && $request.headers) || {};
     const picked = pickNeedHeaders(allHeaders);
-    const uid = extractUIDFromUrl($request.url);
+    const uid = extractUIDFromUrl($request && $request.url);
 
     if (!picked || Object.keys(picked).length === 0) {
-      notify("NS Headers 获取失败", "", "未获取到指定请求头，请重新再试一次。");
-      $done({});
+      Env.notify("NS Headers 获取失败", "", "未获取到指定请求头，请重新再试一次。");
+      Env.done({});
       return;
     }
 
-    const ok1 = $store.set(NS_HEADER_KEY, JSON.stringify(picked));
-    if (uid) $store.set(NS_UID_KEY, String(uid));
+    const ok1 = Env.write(JSON.stringify(picked), NS_HEADER_KEY);
+    if (uid) Env.write(String(uid), NS_UID_KEY);
 
     if (!ok1) {
-      notify("NS Headers 保存失败", "", "写入持久化存储失败，请检查配置。");
-      $done({});
+      Env.notify("NS Headers 保存失败", "", "写入持久化存储失败，请检查配置。");
+      Env.done({});
       return;
     }
 
-    // 先提示保存成功
-    notify(
-      "NS Headers 获取成功",
-      "",
-      uid ? `请求头已保存（UID: ${uid}）` : "请求头已保存（未解析到UID）"
-    );
+    Env.notify("NS Headers 获取成功", "", uid ? `请求头已保存（UID: ${uid}）` : "请求头已保存（未解析到UID）");
 
     if (!uid) {
-      notify("NS 用户信息", "获取失败", "未能从 URL 中解析到 UID。");
-      $done({});
+      Env.notify("NS 用户信息", "获取失败", "未能从 URL 中解析到 UID。");
+      Env.done({});
       return;
     }
 
-    // ✅ 关键：等用户信息请求完成后再 done
-    fetchUserInfo(picked, uid, (err, obj) => {
-      if (err) {
-        notify("NS 用户信息", "请求错误", String(err));
-        $done({});
-        return;
-      }
-
-      const info = parseUserInfo(obj, uid);
-      const lines = [];
-      if (info.username) lines.push(`用户：${info.username}`);
-      if (info.id) lines.push(`ID：${info.id}`);
-      if (info.level !== "") lines.push(`等级：${info.level}`);
-      if (info.chicken !== null) lines.push(`鸡腿：${info.chicken}`);
-      if (info.msg) lines.push(`提示：${info.msg}`);
-      if (lines.length === 0) lines.push(`data：${JSON.stringify(info.raw).slice(0, 200)}`);
-
-      notify("NS 用户信息", "已获取", lines.join("\n"));
-      $done({});
-    });
+    // ✅ 等异步请求完成后再 done（避免 Surge rewrite 场景丢通知）
+    fetchUserInfo(picked, uid)
+      .then((obj) => {
+        const info = parseUserInfo(obj, uid);
+        const lines = [];
+        if (info.username) lines.push(`用户：${info.username}`);
+        if (info.id) lines.push(`ID：${info.id}`);
+        if (info.level !== "") lines.push(`等级：${info.level}`);
+        if (info.chicken !== null) lines.push(`鸡腿：${info.chicken}`);
+        if (info.msg) lines.push(`提示：${info.msg}`);
+        if (lines.length === 0) lines.push(`data：${JSON.stringify(info.raw).slice(0, 200)}`);
+        Env.notify("NS 用户信息", "已获取", lines.join("\n"));
+      })
+      .catch((e) => {
+        Env.notify("NS 用户信息", "请求错误", String(e));
+      })
+      .finally(() => {
+        Env.done({});
+      });
 
     return;
   }
 
-  /* ===================== 定时签到：成功只弹 1 条通知 ===================== */
-  const raw = $store.get(NS_HEADER_KEY);
+  // ========== MODE 2: CHECK-IN ==========
+  const raw = Env.read(NS_HEADER_KEY);
   if (!raw) {
-    notify("NS签到结果", "无法签到", "本地没有已保存的请求头，请先抓包访问一次个人页面。");
-    $done();
+    Env.notify("NS签到结果", "无法签到", "本地没有已保存的请求头，请先抓包访问一次个人页面。");
+    Env.done();
     return;
   }
 
@@ -203,80 +291,74 @@ function main() {
   try {
     savedHeaders = JSON.parse(raw) || {};
   } catch (e) {
-    notify("NS签到结果", "无法签到", "本地保存的请求头数据损坏，请重新访问一次个人页面。");
-    $done();
+    Env.notify("NS签到结果", "无法签到", "本地保存的请求头数据损坏，请重新访问一次个人页面。");
+    Env.done();
     return;
   }
 
-  const uid = $store.get(NS_UID_KEY) || "";
+  const uid = Env.read(NS_UID_KEY) || "";
 
   const signUrl = "https://www.nodeseek.com/api/attendance?random=true";
   const signReq = {
     url: signUrl,
-    method: "POST",
     headers: buildHeaders(savedHeaders),
     body: "",
   };
 
-  $httpClient.request(signReq, (error, response, data) => {
-    if (error) {
-      notify("NS签到结果", "请求错误", String(error));
-      $done();
-      return;
-    }
+  Env.httpPost(signReq)
+    .then((resp) => {
+      const status = resp.status || 0;
+      const respBody = resp.body || "";
+      const signObj = safeJsonParse(respBody);
+      const signMsg = signObj?.message ? String(signObj.message) : "";
+      const gain = signObj ? extractChickenLegs(signObj) : extractChickenLegs(respBody);
 
-    const status = response?.status || 0;
-    const respBody = data || "";
-    const signObj = safeJsonParse(respBody);
-    const signMsg = signObj?.message ? String(signObj.message) : "";
-    const gain = signObj ? extractChickenLegs(signObj) : extractChickenLegs(respBody);
-
-    if (!(status >= 200 && status < 300)) {
-      if (status === 403) {
-        notify("NS签到结果", "403 风控", `暂时被风控，稍后再试${signMsg ? `\n内容：${signMsg}` : ""}`);
-      } else if (status === 500) {
-        notify("NS签到结果", "500 服务器错误", signMsg || respBody || "服务器错误(500)，无返回内容");
-      } else {
-        notify("NS签到结果", `请求异常 ${status}`, signMsg || respBody || `请求失败，status=${status}`);
-      }
-      $done();
-      return;
-    }
-
-    const gainText = gain !== null ? `获得：${gain} 鸡腿` : "获得：未识别到鸡腿数量";
-
-    if (!uid) {
-      const body = `${gainText}${signMsg ? `\n${signMsg}` : ""}\n\n（未保存UID，无法查询余额：请进入个人信息页一次）`;
-      notify("NS签到结果", "已签到", body);
-      $done();
-      return;
-    }
-
-    fetchUserInfo(savedHeaders, uid, (err, infoObj) => {
-      if (err) {
-        const body = `${gainText}${signMsg ? `\n${signMsg}` : ""}\n\n余额查询失败：${String(err)}`;
-        notify("NS签到结果", "已签到", body);
-        $done();
-        return;
+      if (!(status >= 200 && status < 300)) {
+        if (status === 403) {
+          Env.notify("NS签到结果", "403 风控", `暂时被风控，稍后再试${signMsg ? `\n内容：${signMsg}` : ""}`);
+        } else if (status === 500) {
+          Env.notify("NS签到结果", "500 服务器错误", signMsg || respBody || "服务器错误(500)，无返回内容");
+        } else {
+          Env.notify("NS签到结果", `请求异常 ${status}`, signMsg || respBody || `请求失败，status=${status}`);
+        }
+        return null; // stop
       }
 
-      const info = parseUserInfo(infoObj, uid);
-      const balanceText = info.chicken !== null ? `当前鸡腿：${info.chicken}` : "当前鸡腿：未识别到余额";
+      const gainText = gain !== null ? `获得：${gain} 鸡腿` : "获得：未识别到鸡腿数量";
 
-      const head = [];
-      if (info.username) head.push(`用户：${info.username}`);
-      if (info.id) head.push(`ID：${info.id}`);
+      if (!uid) {
+        const body = `${gainText}${signMsg ? `\n签到提示：${signMsg}` : ""}\n\n（未保存UID，无法查询余额：请进入个人信息页一次）`;
+        Env.notify("NS签到结果", "已签到", body);
+        return null;
+      }
 
-      const bodyLines = [];
-      if (head.length) bodyLines.push(head.join("  "));
-      bodyLines.push(gainText);
-      bodyLines.push(balanceText);
-      if (signMsg) bodyLines.push(`签到提示：${signMsg}`);
+      // 成功：查询余额并合并成一条通知
+      return fetchUserInfo(savedHeaders, uid).then((infoObj) => {
+        const info = parseUserInfo(infoObj, uid);
+        const balanceText = info.chicken !== null ? `当前鸡腿：${info.chicken}` : "当前鸡腿：未识别到余额";
 
-      notify("NS签到结果", "已签到", bodyLines.join("\n"));
-      $done();
+        const head = [];
+        if (info.username) head.push(`用户：${info.username}`);
+        if (info.id) head.push(`ID：${info.id}`);
+
+        const lines = [];
+        if (head.length) lines.push(head.join("  "));
+        lines.push(gainText);
+        lines.push(balanceText);
+        if (signMsg) lines.push(`签到提示：${signMsg}`);
+
+        Env.notify("NS签到结果", "已签到", lines.join("\n"));
+      }).catch((e) => {
+        const body = `${gainText}${signMsg ? `\n签到提示：${signMsg}` : ""}\n\n余额查询失败：${String(e)}`;
+        Env.notify("NS签到结果", "已签到", body);
+      });
+    })
+    .catch((e) => {
+      Env.notify("NS签到结果", "请求错误", String(e));
+    })
+    .finally(() => {
+      Env.done();
     });
-  });
 }
 
 main();
