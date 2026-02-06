@@ -9,4 +9,4 @@ hostname = %APPEND% www.nodeseek.com
 NS论坛-抓头 = type=http-request,pattern=^https:\/\/www\.nodeseek\.com\/api\/account\/getInfo\/\d+\?readme=1$,requires-body=false,script-path=https://raw.githubusercontent.com/bigyvc/surge/refs/heads/main/NS.js,timeout=30
 
 # 2) 签到：定时执行
-NS论坛-签到 = type=cron,cronexp=25 9 * * *,script-path=https://raw.githubusercontent.com/bigyvc/surge/refs/heads/main/NS.js,timeout=60,wake-system=1
+NS论坛-签到 = type=cron,cronexp=10 10 * * *,script-path=https://raw.githubusercontent.com/bigyvc/surge/refs/heads/main/NS.js,timeout=60,wake-system=1
