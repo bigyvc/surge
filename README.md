@@ -2,15 +2,6 @@
 
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&height=260&section=header&text=SURGE&fontSize=80&fontAlignY=35&desc=Next‑Gen%20Hacker%20Module%20Suite&descAlignY=55&animation=twinkling" />
-
-![Typing SVG](https://readme-typing-svg.demolab.com?font=Fira+Code\&size=22\&duration=3000\&pause=800\&color=00FFF0\&center=true\&vCenter=true\&width=600\&lines=Injecting+Modules...;Hijacking+Network+Rules...;Deploying+Surge+Ecosystem...)
-
-![GitHub Repo stars](https://img.shields.io/github/stars/bigyvc/surge?style=for-the-badge\&color=ff00ff)
-![GitHub last commit](https://img.shields.io/github/last-commit/bigyvc/surge?style=for-the-badge\&color=00ffff)
-![GitHub repo size](https://img.shields.io/github/repo-size/bigyvc/surge?style=for-the-badge\&color=00ff88)
-<div align="center">
-
 <!-- ☠️ ULTRA HACKER LOGO ☠️ -->
 
 <img src="https://capsule-render.vercel.app/api?type=rect&color=0:ff00ff,50:00ffff,100:00ff88&height=320&section=header&text=SURGE&fontSize=96&fontAlignY=38&desc=WEAPONIZED%20NETWORK%20MODULES&descAlignY=65&animation=fadeIn" />
@@ -24,7 +15,7 @@
 
 </div>
 
-</div>
+
 
 ---
 
