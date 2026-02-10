@@ -9,6 +9,20 @@
 ![GitHub Repo stars](https://img.shields.io/github/stars/bigyvc/surge?style=for-the-badge\&color=ff00ff)
 ![GitHub last commit](https://img.shields.io/github/last-commit/bigyvc/surge?style=for-the-badge\&color=00ffff)
 ![GitHub repo size](https://img.shields.io/github/repo-size/bigyvc/surge?style=for-the-badge\&color=00ff88)
+<div align="center">
+
+<!-- ☠️ ULTRA HACKER LOGO ☠️ -->
+
+<img src="https://capsule-render.vercel.app/api?type=rect&color=0:ff00ff,50:00ffff,100:00ff88&height=320&section=header&text=SURGE&fontSize=96&fontAlignY=38&desc=WEAPONIZED%20NETWORK%20MODULES&descAlignY=65&animation=fadeIn" />
+
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=26&duration=2400&pause=500&color=00FFEA&center=true&vCenter=true&width=820&lines=>>+BOOTING+SURGE+CORE;>>+LOADING+HACKER+MODULES;>>+ROOT+ACCESS+GRANTED;>>+NETWORK+CONTROL+ACQUIRED" />
+
+<img src="https://img.shields.io/badge/STATUS-ONLINE-00ff88?style=for-the-badge&logo=linux" />
+<img src="https://img.shields.io/badge/MODE-CYBERPUNK-ff00ff?style=for-the-badge" />
+<img src="https://img.shields.io/badge/ACCESS-ROOT-00ffff?style=for-the-badge" />
+<img src="https://img.shields.io/badge/LEVEL-BLACK%20OPS-red?style=for-the-badge" />
+
+</div>
 
 </div>
 
