@@ -2,9 +2,14 @@
  * NS论坛签到 - Surge / Loon / Shadowrocket 通用版
  * 2026.02.06
  *
+ * 功能：
+ * - rewrite 抓取 getInfo 请求头并持久化，抓到后弹出用户信息
+ * - cron 签到：工作日优先固定5（random=false），周末优先随机（random=true），主模式失败自动回退
+ * - 签到成功后只弹 1 条通知：获得X鸡腿 + 当前鸡腿余额Y + 模式 + 用户/ID
+ *
  * 需要配置：
  * - rewrite 捕获 header：^https:\/\/www\.nodeseek\.com\/api\/account\/getInfo\/\d+\?readme=1.*$
- * - cron 定时签到：例如 1 0 * * *
+ * - cron：例如 1 0 * * *
  * - MITM: www.nodeseek.com
  */
 
@@ -17,8 +22,7 @@ function main() {
   const Env = (() => {
     const isSurge = typeof $httpClient !== "undefined" && typeof $persistentStore !== "undefined";
     const isLoon = typeof $httpClient !== "undefined" && typeof $loon !== "undefined";
-    const isQX = typeof $task !== "undefined" && typeof $prefs !== "undefined";
-    const isSR = typeof $task !== "undefined" && typeof $prefs !== "undefined" && !isQX; // SR 也长得像 QX
+    const isQXLike = typeof $task !== "undefined" && typeof $prefs !== "undefined"; // SR/QX 风格
 
     function read(key) {
       if (typeof $persistentStore !== "undefined") return $persistentStore.read(key);
@@ -38,7 +42,6 @@ function main() {
       } else if (typeof $notify !== "undefined") {
         $notify(title, subtitle || "", body || "");
       } else {
-        // last resort
         console.log(`[notify] ${title} | ${subtitle} | ${body}`);
       }
     }
@@ -47,8 +50,7 @@ function main() {
       if (typeof $done === "function") $done(resp);
     }
 
-    // HTTP unify:
-    // returns Promise<{status, headers, body}>
+    // HTTP unify: returns Promise<{status, headers, body}>
     function httpGet(options) {
       return httpRequest({ ...options, method: "GET" });
     }
@@ -74,7 +76,7 @@ function main() {
         });
       }
 
-      // Surge / Loon: $httpClient.get/post (没有 request 的环境很多)
+      // Surge / Loon: $httpClient.get/post（不少环境没有 request）
       if (typeof $httpClient !== "undefined") {
         return new Promise((resolve, reject) => {
           const cb = (err, resp, data) => {
@@ -95,7 +97,6 @@ function main() {
           const m = (options.method || "GET").toUpperCase();
           if (m === "POST") {
             if (typeof $httpClient.post === "function") return $httpClient.post(req, cb);
-            // 兜底：少数环境有 request
             if (typeof $httpClient.request === "function") return $httpClient.request({ ...req, method: "POST" }, cb);
             return reject(new Error("No $httpClient.post/request available"));
           } else {
@@ -109,7 +110,7 @@ function main() {
       return Promise.reject(new Error("No HTTP method available in this environment."));
     }
 
-    return { isSurge, isLoon, isQX, isSR, read, write, notify, done, httpGet, httpPost };
+    return { isSurge, isLoon, isQXLike, read, write, notify, done, httpGet, httpPost };
   })();
 
   // ========== UTILS ==========
@@ -227,6 +228,13 @@ function main() {
     });
   }
 
+  // ✅ 工作日固定5、周末随机（按设备本地时间）
+  function getModeForToday() {
+    const day = new Date().getDay(); // 0=周日, 1=周一 ... 6=周六
+    const isWeekend = (day === 0 || day === 6);
+    return isWeekend ? "random" : "fixed";
+  }
+
   // ========== MODE 1: CAPTURE HEADERS ==========
   if (isGetHeader) {
     const allHeaders = ($request && $request.headers) || {};
@@ -256,7 +264,7 @@ function main() {
       return;
     }
 
-    // ✅ 等异步请求完成后再 done（避免 Surge rewrite 场景丢通知）
+    // rewrite 场景：等异步完成后再 done，避免丢通知
     fetchUserInfo(picked, uid)
       .then((obj) => {
         const info = parseUserInfo(obj, uid);
@@ -279,146 +287,146 @@ function main() {
     return;
   }
 
-// ========== MODE 2: CHECK-IN ==========
-const raw = Env.read(NS_HEADER_KEY);
-if (!raw) {
-  Env.notify("NS签到结果", "无法签到", "本地没有已保存的请求头，请先抓包访问一次个人页面。");
-  Env.done();
-  return;
-}
-
-let savedHeaders = {};
-try {
-  savedHeaders = JSON.parse(raw) || {};
-} catch (e) {
-  Env.notify("NS签到结果", "无法签到", "本地保存的请求头数据损坏，请重新访问一次个人页面。");
-  Env.done();
-  return;
-}
-
-const uid = Env.read(NS_UID_KEY) || "";
-
-// ✅ 先固定5(random=false)，失败再随机(random=true)
-const SIGN_URL_FIXED = "https://www.nodeseek.com/api/attendance?random=false";
-const SIGN_URL_RANDOM = "https://www.nodeseek.com/api/attendance?random=true";
-
-function trySign(signUrl) {
-  const req = {
-    url: signUrl,
-    headers: buildHeaders(savedHeaders),
-    body: "",
-  };
-
-  return Env.httpPost(req).then((resp) => {
-    const status = resp.status || 0;
-    const body = resp.body || "";
-    const obj = safeJsonParse(body);
-
-    // 判定是否“成功可用”：
-    // 1) 必须 2xx
-    // 2) 返回体能解析为 JSON（否则认为失败回退）
-    if (!(status >= 200 && status < 300)) {
-      const err = new Error(`status=${status}`);
-      err._status = status;
-      err._body = body;
-      err._obj = obj;
-      throw err;
-    }
-    if (!obj) {
-      const err = new Error(`invalid json, status=${status}`);
-      err._status = status;
-      err._body = body;
-      throw err;
-    }
-
-    return { status, body, obj, signUrl };
-  });
-}
-
-function buildFailNotify(title, status, msg, body) {
-  // 保留你原来那套提示逻辑
-  if (status === 403) {
-    return { title, subtitle: "403 风控", content: `暂时被风控，稍后再试${msg ? `\n内容：${msg}` : ""}` };
+  // ========== MODE 2: CHECK-IN ==========
+  const raw = Env.read(NS_HEADER_KEY);
+  if (!raw) {
+    Env.notify("NS签到结果", "无法签到", "本地没有已保存的请求头，请先抓包访问一次个人页面。");
+    Env.done();
+    return;
   }
-  if (status === 500) {
-    return { title, subtitle: "500 服务器错误", content: msg || body || "服务器错误(500)，无返回内容" };
+
+  let savedHeaders = {};
+  try {
+    savedHeaders = JSON.parse(raw) || {};
+  } catch (e) {
+    Env.notify("NS签到结果", "无法签到", "本地保存的请求头数据损坏，请重新访问一次个人页面。");
+    Env.done();
+    return;
   }
-  return { title, subtitle: `请求异常 ${status}`, content: msg || body || `请求失败，status=${status}` };
-}
 
-trySign(SIGN_URL_FIXED)
-  .catch((e1) => {
-    // 固定模式失败 -> 回退随机模式
-    return trySign(SIGN_URL_RANDOM).catch((e2) => {
-      // 两次都失败：优先用第二次错误（更接近最终结果），但也把第一次失败信息拼上
-      const status2 = e2?._status || 0;
-      const body2 = e2?._body || "";
-      const obj2 = e2?._obj || safeJsonParse(body2) || {};
-      const msg2 = obj2?.message ? String(obj2.message) : "";
+  const uid = Env.read(NS_UID_KEY) || "";
 
-      const status1 = e1?._status || 0;
-      const body1 = e1?._body || "";
-      const obj1 = e1?._obj || safeJsonParse(body1) || {};
-      const msg1 = obj1?.message ? String(obj1.message) : "";
+  const SIGN_URL_FIXED = "https://www.nodeseek.com/api/attendance?random=false";
+  const SIGN_URL_RANDOM = "https://www.nodeseek.com/api/attendance?random=true";
 
-      const n2 = buildFailNotify("NS签到结果", status2, msg2, body2);
-      const extra = `\n\n固定5尝试失败：${status1}${msg1 ? `（${msg1}）` : ""}`;
-      Env.notify(n2.title, n2.subtitle, n2.content + extra);
-      return null; // stop
+  function trySign(signUrl) {
+    const req = {
+      url: signUrl,
+      headers: buildHeaders(savedHeaders),
+      body: "",
+    };
+
+    return Env.httpPost(req).then((resp) => {
+      const status = resp.status || 0;
+      const body = resp.body || "";
+      const obj = safeJsonParse(body);
+
+      // 2xx + JSON 视为成功，否则抛错以便回退
+      if (!(status >= 200 && status < 300)) {
+        const err = new Error(`status=${status}`);
+        err._status = status;
+        err._body = body;
+        err._obj = obj;
+        throw err;
+      }
+      if (!obj) {
+        const err = new Error(`invalid json, status=${status}`);
+        err._status = status;
+        err._body = body;
+        throw err;
+      }
+
+      return { status, body, obj, signUrl };
     });
-  })
-  .then((result) => {
-    if (!result) return;
+  }
 
-    const { status, body, obj, signUrl } = result;
-    const signMsg = obj?.message ? String(obj.message) : "";
-    const gain = extractChickenLegs(obj) ?? extractChickenLegs(body);
-
-    const modeText = signUrl.includes("random=false") ? "固定5" : "随机";
-    const gainText = gain !== null ? `获得：${gain} 鸡腿` : "获得：未识别到鸡腿数量";
-
-    if (!uid) {
-      const content =
-        `${gainText}\n模式：${modeText}` +
-        (signMsg ? `\n签到提示：${signMsg}` : "") +
-        `\n\n（未保存UID，无法查询余额：请进入个人信息页一次）`;
-      Env.notify("NS签到结果", "已签到", content);
-      return;
+  function buildFailNotify(title, status, msg, body) {
+    if (status === 403) {
+      return { title, subtitle: "403 风控", content: `暂时被风控，稍后再试${msg ? `\n内容：${msg}` : ""}` };
     }
+    if (status === 500) {
+      return { title, subtitle: "500 服务器错误", content: msg || body || "服务器错误(500)，无返回内容" };
+    }
+    return { title, subtitle: `请求异常 ${status}`, content: msg || body || `请求失败，status=${status}` };
+  }
 
-    // 成功：查询余额并合并通知（只弹一次）
-    return fetchUserInfo(savedHeaders, uid)
-      .then((infoObj) => {
-        const info = parseUserInfo(infoObj, uid);
-        const balanceText = info.chicken !== null ? `当前鸡腿：${info.chicken}` : "当前鸡腿：未识别到余额";
+  // ✅ 今日优先模式：工作日 fixed；周末 random
+  const modeForToday = getModeForToday(); // "fixed" or "random"
+  const PRIMARY_URL = modeForToday === "fixed" ? SIGN_URL_FIXED : SIGN_URL_RANDOM;
+  const SECONDARY_URL = modeForToday === "fixed" ? SIGN_URL_RANDOM : SIGN_URL_FIXED;
 
-        const head = [];
-        if (info.username) head.push(`用户：${info.username}`);
-        if (info.id) head.push(`ID：${info.id}`);
+  trySign(PRIMARY_URL)
+    .catch((e1) => {
+      // 主模式失败 -> 回退备用模式
+      return trySign(SECONDARY_URL).catch((e2) => {
+        const status2 = e2?._status || 0;
+        const body2 = e2?._body || "";
+        const obj2 = e2?._obj || safeJsonParse(body2) || {};
+        const msg2 = obj2?.message ? String(obj2.message) : "";
 
-        const lines = [];
-        if (head.length) lines.push(head.join("  "));
-        lines.push(gainText);
-        lines.push(balanceText);
-        lines.push(`模式：${modeText}`);
-        if (signMsg) lines.push(`签到提示：${signMsg}`);
+        const status1 = e1?._status || 0;
+        const body1 = e1?._body || "";
+        const obj1 = e1?._obj || safeJsonParse(body1) || {};
+        const msg1 = obj1?.message ? String(obj1.message) : "";
 
-        Env.notify("NS签到结果", "已签到", lines.join("\n"));
-      })
-      .catch((e) => {
+        const n2 = buildFailNotify("NS签到结果", status2, msg2, body2);
+        const extra = `\n\n主模式(${modeForToday === "fixed" ? "固定5" : "随机"})尝试失败：${status1}${msg1 ? `（${msg1}）` : ""}`;
+        Env.notify(n2.title, n2.subtitle, n2.content + extra);
+        return null;
+      });
+    })
+    .then((result) => {
+      if (!result) return;
+
+      const { body, obj, signUrl } = result;
+      const signMsg = obj?.message ? String(obj.message) : "";
+      const gain = extractChickenLegs(obj) ?? extractChickenLegs(body);
+
+      const modeText = signUrl.includes("random=false") ? "固定5" : "随机";
+      const gainText = gain !== null ? `获得：${gain} 鸡腿` : "获得：未识别到鸡腿数量";
+
+      if (!uid) {
         const content =
           `${gainText}\n模式：${modeText}` +
           (signMsg ? `\n签到提示：${signMsg}` : "") +
-          `\n\n余额查询失败：${String(e)}`;
+          `\n\n（未保存UID，无法查询余额：请进入个人信息页一次）`;
         Env.notify("NS签到结果", "已签到", content);
-      });
-  })
-  .catch((e) => {
-    Env.notify("NS签到结果", "请求错误", String(e));
-  })
-  .finally(() => {
-    Env.done();
-  });
+        return;
+      }
+
+      // 成功：查询余额并合并通知（只弹一次）
+      return fetchUserInfo(savedHeaders, uid)
+        .then((infoObj) => {
+          const info = parseUserInfo(infoObj, uid);
+          const balanceText = info.chicken !== null ? `当前鸡腿：${info.chicken}` : "当前鸡腿：未识别到余额";
+
+          const head = [];
+          if (info.username) head.push(`用户：${info.username}`);
+          if (info.id) head.push(`ID：${info.id}`);
+
+          const lines = [];
+          if (head.length) lines.push(head.join("  "));
+          lines.push(gainText);
+          lines.push(balanceText);
+          lines.push(`模式：${modeText}`);
+          if (signMsg) lines.push(`签到提示：${signMsg}`);
+
+          Env.notify("NS签到结果", "已签到", lines.join("\n"));
+        })
+        .catch((e) => {
+          const content =
+            `${gainText}\n模式：${modeText}` +
+            (signMsg ? `\n签到提示：${signMsg}` : "") +
+            `\n\n余额查询失败：${String(e)}`;
+          Env.notify("NS签到结果", "已签到", content);
+        });
+    })
+    .catch((e) => {
+      Env.notify("NS签到结果", "请求错误", String(e));
+    })
+    .finally(() => {
+      Env.done();
+    });
 }
 
 main();
