@@ -1,4 +1,21 @@
 (function () {
+  const _done = typeof $done === "function" ? $done : null;
+  if (_done) {
+    $done = function (obj) {
+      try {
+        if (obj && typeof obj.body === "string") {
+          console.log("ONSKR_DEBUG::DONE_BODY=" + obj.body);
+        } else if (obj && obj.url) {
+          console.log("ONSKR_DEBUG::DONE_URL=" + obj.url);
+        } else {
+          console.log("ONSKR_DEBUG::DONE_OBJ=" + JSON.stringify(obj));
+        }
+      } catch (e) {}
+      return _done(obj);
+    };
+  }
+})();
+(function () {
   function safe(v) {
     try {
       if (typeof v === "string") return v;
