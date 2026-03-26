@@ -21,11 +21,11 @@ function httpRequest(callback) {
     }
 }
 
-// 🔓 HEX 解密版
+// ✅ 正确解密（HEX + 正确 key/iv）
 function decryptData(hexStr) {
     try {
-        const key = CryptoJS.enc.Utf8.parse("0123456789abcdef"); // 可能需要换
-        const iv  = CryptoJS.enc.Utf8.parse("abcdef0123456789"); // 可能需要换
+        const key = CryptoJS.enc.Utf8.parse("e3f1c9a8b7d6e5f4");
+        const iv  = CryptoJS.enc.Utf8.parse("a1b2c3d4e5f60718");
 
         const encryptedHex = CryptoJS.enc.Hex.parse(hexStr);
 
@@ -41,10 +41,9 @@ function decryptData(hexStr) {
 
         const text = decrypted.toString(CryptoJS.enc.Utf8);
 
-        console.log("🔍 解密后:", text.slice(0,100));
+        console.log("🔓 解密成功:", text.slice(0,80));
 
         const json = JSON.parse(text);
-
         return json.data;
 
     } catch (e) {
@@ -65,8 +64,6 @@ httpRequest((err, body) => {
         $done();
         return;
     }
-
-    console.log("✅ HEX数据长度:", body.length);
 
     const nodes = decryptData(body);
     const proxies = formatProxies(nodes);
