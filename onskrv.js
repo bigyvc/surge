@@ -1,76 +1,96 @@
 const API_URL = "https://ioa.onskrgames.uk/getLines";
 
 const headers = {
-    "user-agent": "Surge iOS",
-    "accept": "*/*"
+    "User-Agent": "Shadowrocket/2.2.25 (iPhone; iOS 17.0)",
+    "Accept": "*/*",
+    "Content-Type": "application/json",
+    "platform": "ios",
+    "versionnum": "1.0.0",
+    "bundleid": "com.onskr.vpn"
 };
 
-function httpRequest(callback) {
-    if (typeof $task !== "undefined") {
-        $task.fetch({
-            url: API_URL,
-            headers: headers
-        }).then(
-            res => callback(null, res.body),
-            err => callback(err)
-        );
-    } else {
-        $httpClient.get({ url: API_URL, headers }, (err, resp, data) => {
-            callback(err, data);
-        });
+// RC4
+function rc4(key, data) {
+    let s = [], j = 0, x, res = '';
+    for (let i = 0; i < 256; i++) s[i] = i;
+
+    for (let i = 0; i < 256; i++) {
+        j = (j + s[i] + key.charCodeAt(i % key.length)) % 256;
+        [s[i], s[j]] = [s[j], s[i]];
     }
+
+    let i = 0; j = 0;
+    for (let y = 0; y < data.length; y++) {
+        i = (i + 1) % 256;
+        j = (j + s[i]) % 256;
+        [s[i], s[j]] = [s[j], s[i]];
+        x = s[(s[i] + s[j]) % 256];
+        res += String.fromCharCode(data.charCodeAt(y) ^ x);
+    }
+    return res;
 }
 
-// ✅ 正确解密（HEX + 正确 key/iv）
-function decryptData(hexStr) {
-    try {
-        const key = CryptoJS.enc.Utf8.parse("e3f1c9a8b7d6e5f4");
-        const iv  = CryptoJS.enc.Utf8.parse("a1b2c3d4e5f60718");
+// 生成 key/iv
+function generateKeyIV() {
+    const seed1 = "onskr_key_seed";
+    const seed2 = "onskr_iv_seed";
 
-        const encryptedHex = CryptoJS.enc.Hex.parse(hexStr);
+    const mix = headers["User-Agent"] + headers["platform"];
 
-        const decrypted = CryptoJS.AES.decrypt(
-            { ciphertext: encryptedHex },
-            key,
-            {
-                iv: iv,
-                mode: CryptoJS.mode.CBC,
-                padding: CryptoJS.pad.Pkcs7
-            }
-        );
-
-        const text = decrypted.toString(CryptoJS.enc.Utf8);
-
-        console.log("🔓 解密成功:", text.slice(0,80));
-
-        const json = JSON.parse(text);
-        return json.data;
-
-    } catch (e) {
-        console.log("❌ 解密失败:", e);
-        return [];
-    }
+    return {
+        key: rc4(seed1, mix).slice(0, 16),
+        iv:  rc4(seed2, mix).slice(0, 16)
+    };
 }
 
-function formatProxies(list) {
-    return list.map(n =>
-        `${n.title} = ss, ${n.ip}, ${n.port}, encrypt-method=${n.encrypt}, password=${n.password}`
+// 请求
+function request(cb) {
+    $task.fetch({ url: API_URL, headers }).then(
+        res => cb(null, res.body),
+        err => cb(err)
     );
 }
 
-httpRequest((err, body) => {
-    if (err || !body) {
-        console.log("❌ 请求失败");
+// 解密
+function decrypt(hexStr) {
+    const { key, iv } = generateKeyIV();
+
+    console.log("🔑 key:", key);
+    console.log("🔑 iv :", iv);
+
+    const encrypted = CryptoJS.enc.Hex.parse(hexStr);
+
+    const decrypted = CryptoJS.AES.decrypt(
+        { ciphertext: encrypted },
+        CryptoJS.enc.Utf8.parse(key),
+        {
+            iv: CryptoJS.enc.Utf8.parse(iv),
+            mode: CryptoJS.mode.CBC,
+            padding: CryptoJS.pad.Pkcs7
+        }
+    );
+
+    return decrypted.toString(CryptoJS.enc.Utf8);
+}
+
+// 主流程
+request((err, body) => {
+    if (err) return $done();
+
+    try {
+        const text = decrypt(body);
+        console.log("✅ 解密:", text.slice(0,80));
+
+        const json = JSON.parse(text);
+
+        const proxies = json.data.map(n =>
+            `${n.title} = ss, ${n.ip}, ${n.port}, encrypt-method=${n.encrypt}, password=${n.password}`
+        );
+
+        $done({ body: proxies.join("\n") });
+
+    } catch (e) {
+        console.log("❌ 解密失败:", e);
         $done();
-        return;
     }
-
-    const nodes = decryptData(body);
-    const proxies = formatProxies(nodes);
-
-    console.log("✅ 节点数量:", proxies.length);
-
-    $done({
-        body: proxies.join("\n")
-    });
 });
