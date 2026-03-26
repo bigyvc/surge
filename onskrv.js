@@ -74,23 +74,24 @@ function decrypt(hexStr) {
 }
 
 // 主流程
-request((err, body) => {
-    if (err) return $done();
+function request(cb) {
+    const options = {
+        url: API_URL,
+        headers: headers
+    };
 
-    try {
-        const text = decrypt(body);
-        console.log("✅ 解密:", text.slice(0,80));
-
-        const json = JSON.parse(text);
-
-        const proxies = json.data.map(n =>
-            `${n.title} = ss, ${n.ip}, ${n.port}, encrypt-method=${n.encrypt}, password=${n.password}`
+    if (typeof $task !== "undefined") {
+        // Quantumult X
+        $task.fetch(options).then(
+            res => cb(null, res.body),
+            err => cb(err)
         );
-
-        $done({ body: proxies.join("\n") });
-
-    } catch (e) {
-        console.log("❌ 解密失败:", e);
-        $done();
+    } else if (typeof $httpClient !== "undefined") {
+        // Surge / Loon / Shadowrocket
+        $httpClient.get(options, (err, resp, data) => {
+            cb(err, data);
+        });
+    } else {
+        cb(new Error("No HTTP client available"));
     }
-});
+}
