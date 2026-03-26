@@ -70,6 +70,9 @@ function request(cb) {
 function decrypt(hexStr) {
     const { key, iv } = generateKeyIV();
 
+    console.log("长度:", body.length);
+    console.log("前20:", body.slice(0,20));
+    console.log("后20:", body.slice(-20));
     console.log("🔑 key:", key);
     console.log("🔑 iv :", iv);
 
