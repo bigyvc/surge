@@ -45,10 +45,25 @@ function generateKeyIV() {
 
 // 请求
 function request(cb) {
-    $task.fetch({ url: API_URL, headers }).then(
-        res => cb(null, res.body),
-        err => cb(err)
-    );
+    const options = {
+        url: API_URL,
+        headers: headers
+    };
+
+    if (typeof $task !== "undefined") {
+        // Quantumult X
+        $task.fetch(options).then(
+            res => cb(null, res.body),
+            err => cb(err)
+        );
+    } else if (typeof $httpClient !== "undefined") {
+        // Surge / Loon / Shadowrocket
+        $httpClient.get(options, (err, resp, data) => {
+            cb(err, data);
+        });
+    } else {
+        cb(new Error("No HTTP client available"));
+    }
 }
 
 // 解密
@@ -74,24 +89,23 @@ function decrypt(hexStr) {
 }
 
 // 主流程
-function request(cb) {
-    const options = {
-        url: API_URL,
-        headers: headers
-    };
+request((err, body) => {
+    if (err) return $done();
 
-    if (typeof $task !== "undefined") {
-        // Quantumult X
-        $task.fetch(options).then(
-            res => cb(null, res.body),
-            err => cb(err)
+    try {
+        const text = decrypt(body);
+        console.log("✅ 解密:", text.slice(0,80));
+
+        const json = JSON.parse(text);
+
+        const proxies = json.data.map(n =>
+            `${n.title} = ss, ${n.ip}, ${n.port}, encrypt-method=${n.encrypt}, password=${n.password}`
         );
-    } else if (typeof $httpClient !== "undefined") {
-        // Surge / Loon / Shadowrocket
-        $httpClient.get(options, (err, resp, data) => {
-            cb(err, data);
-        });
-    } else {
-        cb(new Error("No HTTP client available"));
+
+        $done({ body: proxies.join("\n") });
+
+    } catch (e) {
+        console.log("❌ 解密失败:", e);
+        $done();
     }
-}
+});
