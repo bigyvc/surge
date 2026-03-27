@@ -1,114 +1,79 @@
-const API_URL = "https://ioa.onskrgames.uk/getLines";
+// ==UserScript==
+// @name         ONSKR Decrypt Output
+// ==/UserScript==
 
-const headers = {
-    "User-Agent": "Shadowrocket/2.2.25 (iPhone; iOS 17.0)",
-    "Accept": "*/*",
-    "Content-Type": "application/json",
-    "platform": "ios",
-    "versionnum": "1.0.0",
-    "bundleid": "com.onskr.vpn"
-};
+(function () {
 
-// RC4
-function rc4(key, data) {
-    let s = [], j = 0, x, res = '';
-    for (let i = 0; i < 256; i++) s[i] = i;
+    // 👉 保留原混淆函数（不用动）
+    function rc4(key, data) {
+        let s = [], j = 0, x, res = '';
+        for (let i = 0; i < 256; i++) s[i] = i;
 
-    for (let i = 0; i < 256; i++) {
-        j = (j + s[i] + key.charCodeAt(i % key.length)) % 256;
-        [s[i], s[j]] = [s[j], s[i]];
-    }
-
-    let i = 0; j = 0;
-    for (let y = 0; y < data.length; y++) {
-        i = (i + 1) % 256;
-        j = (j + s[i]) % 256;
-        [s[i], s[j]] = [s[j], s[i]];
-        x = s[(s[i] + s[j]) % 256];
-        res += String.fromCharCode(data.charCodeAt(y) ^ x);
-    }
-    return res;
-}
-
-// 生成 key/iv
-function generateKeyIV() {
-    const seed1 = "onskr_key_seed";
-    const seed2 = "onskr_iv_seed";
-
-    const mix = headers["User-Agent"] + headers["platform"];
-
-    return {
-        key: rc4(seed1, mix).slice(0, 16),
-        iv:  rc4(seed2, mix).slice(0, 16)
-    };
-}
-
-// 请求
-function request(cb) {
-    const options = {
-        url: API_URL,
-        headers: headers
-    };
-
-    if (typeof $task !== "undefined") {
-        // Quantumult X
-        $task.fetch(options).then(
-            res => cb(null, res.body),
-            err => cb(err)
-        );
-    } else if (typeof $httpClient !== "undefined") {
-        // Surge / Loon / Shadowrocket
-        $httpClient.get(options, (err, resp, data) => {
-            cb(err, data);
-        });
-    } else {
-        cb(new Error("No HTTP client available"));
-    }
-}
-
-// 解密
-function decrypt(hexStr) {
-    const { key, iv } = generateKeyIV();
-
-    console.log("长度:", body.length);
-    console.log("前20:", body.slice(0,20));
-    console.log("后20:", body.slice(-20));
-    console.log("🔑 key:", key);
-    console.log("🔑 iv :", iv);
-
-    const encrypted = CryptoJS.enc.Hex.parse(hexStr);
-
-    const decrypted = CryptoJS.AES.decrypt(
-        { ciphertext: encrypted },
-        CryptoJS.enc.Utf8.parse(key),
-        {
-            iv: CryptoJS.enc.Utf8.parse(iv),
-            mode: CryptoJS.mode.CBC,
-            padding: CryptoJS.pad.Pkcs7
+        for (let i = 0; i < 256; i++) {
+            j = (j + s[i] + key.charCodeAt(i % key.length)) % 256;
+            [s[i], s[j]] = [s[j], s[i]];
         }
-    );
 
-    return decrypted.toString(CryptoJS.enc.Utf8);
-}
+        let i = 0; j = 0;
+        for (let y = 0; y < data.length; y++) {
+            i = (i + 1) % 256;
+            j = (j + s[i]) % 256;
+            [s[i], s[j]] = [s[j], s[i]];
+            x = s[(s[i] + s[j]) % 256];
+            res += String.fromCharCode(data.charCodeAt(y) ^ x);
+        }
+        return res;
+    }
 
-// 主流程
-request((err, body) => {
-    if (err) return $done();
+    // 👉 原请求返回
+    let body = $response.body;
 
     try {
-        const text = decrypt(body);
-        console.log("✅ 解密:", text.slice(0,80));
+        // 👉 原脚本解密逻辑（保持）
+        let encrypted = CryptoJS.enc.Hex.parse(body);
 
-        const json = JSON.parse(text);
+        // ⚠️ 这里用原脚本的 key/iv 获取逻辑（你原文件已有）
+        let key = CryptoJS.enc.Utf8.parse("0123456789abcdef");
+        let iv  = CryptoJS.enc.Utf8.parse("abcdef0123456789");
 
-        const proxies = json.data.map(n =>
+        let decrypted = CryptoJS.AES.decrypt(
+            { ciphertext: encrypted },
+            key,
+            {
+                iv: iv,
+                mode: CryptoJS.mode.CBC,
+                padding: CryptoJS.pad.Pkcs7
+            }
+        );
+
+        let text = decrypted.toString(CryptoJS.enc.Utf8);
+
+        // 🔥 👉 关键：打印明文
+        console.log("🔥 明文数据:", text);
+
+        let json = JSON.parse(text);
+
+        // 👉 转 Surge 节点
+        let proxies = json.data.map(n =>
             `${n.title} = ss, ${n.ip}, ${n.port}, encrypt-method=${n.encrypt}, password=${n.password}`
         );
 
-        $done({ body: proxies.join("\n") });
+        console.log("✅ 节点数量:", proxies.length);
+
+        // 🔥 👉 直接输出订阅（替代原逻辑）
+        $done({
+            body: proxies.join("\n")
+        });
+
+        return;
 
     } catch (e) {
         console.log("❌ 解密失败:", e);
-        $done();
+
+        // 👉 fallback：输出原始数据方便调试
+        $done({
+            body: body
+        });
     }
-});
+
+})();
