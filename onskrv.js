@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         ONSKR FULL FIX
+// @name         ONSKR FULL FIX SAFE
 // ==/UserScript==
 
 const API_URL = "https://ioa.onskrgames.uk/getLines";
@@ -13,22 +13,17 @@ if (typeof $request !== "undefined") {
         url: API_URL
     });
 
-    return;
-}
+} else if (typeof $response !== "undefined") {
 
-// ====== response 阶段 ======
-if (typeof $response !== "undefined") {
-
+    // ====== response 阶段 ======
     let body = $response.body;
 
     try {
 
         console.log("📦 收到数据长度:", body.length);
 
-        // 👉 HEX
         let encrypted = CryptoJS.enc.Hex.parse(body);
 
-        // ⚠️ 这里仍然需要原脚本的 key / iv
         let decrypted = CryptoJS.AES.decrypt(
             { ciphertext: encrypted },
             key,
@@ -54,8 +49,6 @@ if (typeof $response !== "undefined") {
         $done({
             body: proxies.join("\n")
         });
-
-        return;
 
     } catch (e) {
 
